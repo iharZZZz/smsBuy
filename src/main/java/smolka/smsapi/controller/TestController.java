@@ -10,7 +10,7 @@ public class TestController {
 
     @GetMapping("/test")
     public Integer test() {
-        log.debug("1");
+        log.debug("11");
         return 1;
     }
 }

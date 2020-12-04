@@ -14,6 +14,7 @@
     </properties>
 
     <dependencies>
+    <!--утилиты-->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -25,6 +26,7 @@
             <artifactId>logback-classic</artifactId>
             <version>1.2.3</version>
         </dependency>
+        <!--spring-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
