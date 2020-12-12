@@ -1,0 +1,37 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd
+        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd"
+        logicalFilePath="20201212145800_init_schema.xml">
+
+    <changeSet  id="20201212145800"  author="ihar_smolka@senla.eu">
+
+        <createTable tableName="API_KEY">
+            <column name="ID" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="USER_ID" type="BIGINT">
+                <constraints unique="true" nullable="false"/>
+            </column>
+            <column name="USER_KEY" type="VARCHAR(500)">
+                <constraints unique="true" nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="ACTIVATION">
+            <column name="ID" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="KEY_ID" type="BIGINT"/>
+            <column name="NUMBER" type="VARCHAR(100)"/>
+            <column name="MESSAGE" type="VARCHAR(1000)"/>
+            <column name="COUNTRY_CODE" type="VARCHAR(10)"/>
+            <column name="SERVICE_CODE" type="VARCHAR(10)"/>
+            <column name="SOURCE_NAME" type="VARCHAR(20)"/>
+            <column name="SOURCE_ID" type="BIGINT"/>
+            <column name="COST" type="DECIMAL(23,5)"/>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>
