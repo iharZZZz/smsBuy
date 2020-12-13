@@ -12,5 +12,8 @@ public interface ActivationRepository extends JpaRepository<Activation, Long> {
     List<Activation> findAllActivationsByUserKey(UserKey userKey);
 
     @EntityGraph(value = "activation.all")
+    Activation findActivationByIdAndUserKey(Long id, UserKey userKey);
+
+    @EntityGraph(value = "activation.all")
     Activation findActivationById(Long id);
 }

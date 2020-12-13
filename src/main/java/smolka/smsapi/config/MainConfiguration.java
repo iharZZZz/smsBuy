@@ -2,6 +2,8 @@ package smolka.smsapi.config;
 
 import liquibase.Liquibase;
 import liquibase.integration.spring.SpringLiquibase;
+import org.modelmapper.ModelMapper;
+import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -102,6 +104,17 @@ public class MainConfiguration {
         liquibase.setChangeLog(liquibaseChangelogPath);
         liquibase.setDataSource(dataSource());
         return liquibase;
+    }
+
+    @Bean
+    public ModelMapper modelMapper() {
+        ModelMapper mapper = new ModelMapper();
+        mapper.getConfiguration()
+                .setMatchingStrategy(MatchingStrategies.STRICT)
+                .setFieldMatchingEnabled(true)
+                .setSkipNullEnabled(true)
+                .setFieldAccessLevel(org.modelmapper.config.Configuration.AccessLevel.PRIVATE);
+        return mapper;
     }
 
     @Bean(name = "tm")

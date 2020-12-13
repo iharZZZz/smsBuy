@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "ACTIVATION")
@@ -45,6 +46,15 @@ public class Activation {
 
     @Column(name = "SOURCE_ID")
     private Long sourceId;
+
+    @Column(name = "STATUS")
+    private Integer status;
+
+    @Column(name = "START_DATE")
+    private LocalDateTime createDate;
+
+    @Column(name = "CLOSE_DATE")
+    private LocalDateTime finishDate;
 
     @Column(name = "COST")
     private BigDecimal cost;

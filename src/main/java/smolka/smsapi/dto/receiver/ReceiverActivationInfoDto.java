@@ -1,4 +1,4 @@
-package smolka.smsapi.dto;
+package smolka.smsapi.dto.receiver;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

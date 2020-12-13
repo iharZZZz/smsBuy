@@ -25,6 +25,9 @@
                 <constraints primaryKey="true" nullable="false"/>
             </column>
             <column name="KEY_ID" type="BIGINT"/>
+            <column name="START_DATE" type="DATETIME"/>
+            <column name="CLOSE_DATE" type="DATETIME"/>
+            <column name="STATUS" type="INTEGER"/>
             <column name="NUMBER" type="VARCHAR(100)"/>
             <column name="MESSAGE" type="VARCHAR(1000)"/>
             <column name="COUNTRY_CODE" type="VARCHAR(10)"/>

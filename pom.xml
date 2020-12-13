@@ -66,7 +66,12 @@
             <artifactId>liquibase-core</artifactId>
             <version>4.2.1</version>
         </dependency>
-
+        <!-- mapper -->
+        <dependency>
+            <groupId>org.modelmapper</groupId>
+            <artifactId>modelmapper</artifactId>
+            <version>2.3.7</version>
+        </dependency>
     </dependencies>
 
     <build>

@@ -6,4 +6,5 @@ import smolka.smsapi.model.UserKey;
 public interface UserKeyRepository extends JpaRepository<UserKey, Long> {
     UserKey findUserKeyByKey(String key);
     UserKey findUserKeyByUserId(Long userId);
+    void deleteByKey(String key);
 }

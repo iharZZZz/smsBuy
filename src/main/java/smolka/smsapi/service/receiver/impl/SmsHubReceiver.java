@@ -7,7 +7,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
-import smolka.smsapi.dto.*;
+import smolka.smsapi.dto.receiver.ReceiverActivationInfoDto;
+import smolka.smsapi.dto.receiver.ReceiverActivationStatusListDto;
+import smolka.smsapi.dto.receiver.ReceiverCostMapDto;
 import smolka.smsapi.enums.*;
 import smolka.smsapi.enums.smshub.SmsHubErrorResponseDictionary;
 import smolka.smsapi.exception.InternalErrorException;
@@ -34,18 +36,17 @@ public class SmsHubReceiver implements RestReceiver {
     private static final String RESOURCE_URL = "https://smshub.org/stubs/handler_api.php";
 
     @Override
-    public ReceiverMessage<ReceiverActivationInfoDto> orderActivation(BigDecimal cost, CountryList country, ServiceList service) {
+    public ReceiverActivationInfoDto orderActivation(CountryList country, ServiceList service) {
         ResponseEntity<String> response = null;
         try {
             final String actionName = "getNumber";
             HttpEntity<MultiValueMap<String, String>> request = SmsHubRequestCreator.createOrderRequest(SMS_HUB_API_KEY, actionName, country, service);
             response = restTemplate.postForEntity(RESOURCE_URL, request, String.class);
             if (response.getBody() != null && response.getBody().contains("ACCESS_NUMBER")) {
-                ReceiverActivationInfoDto activationInfo = smsHubMapper.extractActivationInfoFromResponse(response.getBody());
-                return new ReceiverMessage<>(ReceiverActivationInfoDto.class, InternalStatus.OK.getStatusCode(), InternalStatus.OK.getStatusVal(), activationInfo);
+                return smsHubMapper.extractActivationInfoFromResponse(response.getBody());
             } else {
                 ErrorDictionary error = SmsHubErrorResponseDictionary.getError(response.getBody());
-                throw new UnexpectedResponseException("Not successful json at orderActivation method", error);
+                throw new UnexpectedResponseException("Not successful json at orderActivation method", error, response);
             }
         }
         catch (Exception exc) {
@@ -56,7 +57,7 @@ public class SmsHubReceiver implements RestReceiver {
     }
 
     @Override
-    public ReceiverMessage<ReceiverActivationStatusListDto>  getActivationsStatus() {
+    public ReceiverActivationStatusListDto  getActivationsStatus() {
         ResponseEntity<String> response = null;
         try {
             final String actionName = "getCurrentActivations";
@@ -64,16 +65,10 @@ public class SmsHubReceiver implements RestReceiver {
             response = restTemplate.postForEntity(RESOURCE_URL, request, String.class);
             Map<String, Object> activationStatusMap = smsHubMapper.getMapActivationsStatus(response.getBody());
             if (activationStatusMap.get("status") != null && activationStatusMap.get("status").equals("success")) {
-                return new ReceiverMessage<>(ReceiverActivationStatusListDto.class,
-                        InternalStatus.OK.getStatusCode(),
-                        InternalStatus.OK.getStatusVal(),
-                        new ReceiverActivationStatusListDto(smsHubMapper.mapActivationsStatusResponse(activationStatusMap)));
+                return new ReceiverActivationStatusListDto(smsHubMapper.mapActivationsStatusResponse(activationStatusMap));
             }
             if (activationStatusMap.get("msg") != null && activationStatusMap.get("msg").equals("no_activations")) {
-                return new ReceiverMessage<>(ReceiverActivationStatusListDto.class,
-                        InternalStatus.OK.getStatusCode(),
-                        InternalStatus.OK.getStatusVal(),
-                        new ReceiverActivationStatusListDto(new ArrayList<>()));
+                return new ReceiverActivationStatusListDto(new ArrayList<>());
             }
             throw new UnexpectedResponseException("Not successful json for activationsStatus", ErrorDictionary.UNKNOWN, response);
         }
@@ -85,17 +80,17 @@ public class SmsHubReceiver implements RestReceiver {
     }
 
     @Override
-    public ReceiverMessage<ReceiverCostMapDto> getCostMap() {
+    public ReceiverCostMapDto getCostMap() {
         ResponseEntity<String> response = null;
         try {
             final String actionName = "getNumbersStatusAndCostHubFree";
             HttpEntity<MultiValueMap<String, String>> request = SmsHubRequestCreator.createEmptyRequest(SMS_HUB_API_KEY, actionName);
             response = restTemplate.postForEntity(RESOURCE_URL, request, String.class);
             if (response.getStatusCode().is2xxSuccessful() && !SmsHubErrorResponseDictionary.isError(response.getBody())) {
-                return new ReceiverMessage<>(ReceiverCostMapDto.class, InternalStatus.OK.getStatusCode(), InternalStatus.OK.getStatusVal(), smsHubMapper.mapCostMapForSmsHubJson(response.getBody()));
+                return smsHubMapper.mapCostMapForSmsHubJson(response.getBody());
             } else {
                 ErrorDictionary error = SmsHubErrorResponseDictionary.getError(response.getBody());
-                throw new UnexpectedResponseException("Not successful json at getCostMap method", error);
+                throw new UnexpectedResponseException("Not successful json at getCostMap method", error, response);
             }
         } catch (Exception exc) {
             String errorResponse = response == null || response.getBody() == null ? "NULL" :response.getBody();
