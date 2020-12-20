@@ -1,15 +1,15 @@
 package smolka.smsapi.service.receiver;
 
 import smolka.smsapi.dto.receiver.ReceiverActivationInfoDto;
-import smolka.smsapi.dto.receiver.ReceiverActivationStatusListDto;
+import smolka.smsapi.dto.receiver.ReceiverActivationStatusDto;
 import smolka.smsapi.dto.receiver.ReceiverCostMapDto;
-import smolka.smsapi.enums.CountryList;
-import smolka.smsapi.enums.ServiceList;
+import smolka.smsapi.model.Country;
+import smolka.smsapi.model.ActivationTarget;
 
-import java.math.BigDecimal;
+import java.util.List;
 
 public interface RestReceiver {
-    ReceiverActivationInfoDto orderActivation(CountryList country, ServiceList service);
-    ReceiverActivationStatusListDto getActivationsStatus();
+    ReceiverActivationInfoDto orderActivation(Country country, ActivationTarget service);
+    List<ReceiverActivationStatusDto> getActivationsStatus();
     ReceiverCostMapDto getCostMap();
 }

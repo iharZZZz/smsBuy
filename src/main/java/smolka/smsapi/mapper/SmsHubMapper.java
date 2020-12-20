@@ -2,13 +2,15 @@ package smolka.smsapi.mapper;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import smolka.smsapi.dto.receiver.ReceiverActivationInfoDto;
 import smolka.smsapi.dto.receiver.ReceiverActivationStatusDto;
 import smolka.smsapi.dto.receiver.ReceiverCostMapDto;
 import smolka.smsapi.enums.ActivationStatus;
-import smolka.smsapi.enums.ServiceList;
-import smolka.smsapi.enums.smshub.SmsHubServiceDictionary;
+import smolka.smsapi.enums.SourceList;
+import smolka.smsapi.model.ActivationTarget;
+import smolka.smsapi.repository.ActivationTargetRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -21,6 +23,8 @@ import java.util.Map;
 public class SmsHubMapper {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+    @Autowired
+    private ActivationTargetRepository activationTargetRepository;
 
     public List<ReceiverActivationStatusDto> mapActivationsStatusResponse(Map<String, Object> root) {
         List<Map<String, Object>> arrayActivations = (List<Map<String, Object>>)root.get("array");
@@ -30,13 +34,13 @@ public class SmsHubMapper {
             ActivationStatus status = ActivationStatus.ACTIVE;
             int statusCode = Integer.parseInt(element.get("status").toString());
             switch (statusCode) {
-                case 3: {
+                case 6: {
                     status = ActivationStatus.SMS_RECEIVED;
                 }
             }
             final String code = element.get("code").toString();
             final LocalDateTime createDate = LocalDateTime.parse(element.get("createDate").toString());
-            ReceiverActivationStatusDto activationStatus = new ReceiverActivationStatusDto(id, status, code, createDate);
+            ReceiverActivationStatusDto activationStatus = new ReceiverActivationStatusDto(id, status, code, createDate, SourceList.SMSHUB);
             activationStatusList.add(activationStatus);
         }
         return activationStatusList;
@@ -55,9 +59,11 @@ public class SmsHubMapper {
     public ReceiverCostMapDto mapCostMapForSmsHubJson(String response) throws JsonProcessingException {
         Map<String, Object> json = objectMapper.readValue(response, HashMap.class);
         ReceiverCostMapDto costMap = new ReceiverCostMapDto();
+        costMap.setSource(SourceList.SMSHUB);
         final String priceMapKey = "priceMap";
+        List<ActivationTarget> services = activationTargetRepository.findAll();
         for (String s : json.keySet()) {
-            ServiceList service = SmsHubServiceDictionary.getInternalServiceBySmsHubName(s);
+            ActivationTarget service = services.stream().filter(serv -> serv.getSmshubServiceCode().equals(s)).findAny().orElse(null);
             if (service != null) {
                 Map<String, Integer> serviceCosts = (Map<String, Integer>) ((Map<String, Object>)json.get(s)).get(priceMapKey);
                 for (String cost : serviceCosts.keySet()) {

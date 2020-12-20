@@ -6,10 +6,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import smolka.smsapi.enums.CountryList;
-import smolka.smsapi.enums.ServiceList;
-import smolka.smsapi.enums.smshub.SmsHubCountryDictionary;
-import smolka.smsapi.enums.smshub.SmsHubServiceDictionary;
+import smolka.smsapi.model.ActivationTarget;
+import smolka.smsapi.model.Country;
 
 @UtilityClass
 public class SmsHubRequestCreator {
@@ -20,24 +18,16 @@ public class SmsHubRequestCreator {
     private static final String OPERATOR_FORM_DATA_PROP_NAME = "operator";
     private static final String COUNTRY_FORM_DATA_PROP_NAME = "country";
 
-    public static HttpEntity<MultiValueMap<String, String>> createOrderRequest(String apiKey, String action, CountryList country, ServiceList service) {
+    public static HttpEntity<MultiValueMap<String, String>> createOrderRequest(String apiKey, String action, Country country, ActivationTarget service) {
         final String operator = "any";
-        final SmsHubCountryDictionary smsHubCountry = SmsHubCountryDictionary.getSmsHubCountryByInternalCountry(country);
-        if (smsHubCountry == null) {
-            throw new IllegalArgumentException("Такая страна не поддерживается");
-        }
-        final SmsHubServiceDictionary smsHubService = SmsHubServiceDictionary.getSmsHubServiceByInternalService(service);
-        if (smsHubService == null) {
-            throw new IllegalArgumentException("Такой сервис не поддерживается");
-        }
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
         map.add(API_KEY_FORM_DATA_PROP_NAME, apiKey);
         map.add(ACTION_FORM_DATA_PROP_NAME, action);
-        map.add(SERVICE_FORM_DATA_PROP_NAME, smsHubService.getSmsHubName());
+        map.add(SERVICE_FORM_DATA_PROP_NAME, service.getSmshubServiceCode());
         map.add(OPERATOR_FORM_DATA_PROP_NAME, operator);
-        map.add(COUNTRY_FORM_DATA_PROP_NAME, smsHubCountry.getSmsHubCountryName());
+        map.add(COUNTRY_FORM_DATA_PROP_NAME, country.getSmshubCountryCode());
         return new HttpEntity<>(map, httpHeaders);
     }
 

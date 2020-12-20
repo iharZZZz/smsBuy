@@ -5,7 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import smolka.smsapi.dto.CostMapDto;
 import smolka.smsapi.dto.receiver.ReceiverCostMapDto;
-import smolka.smsapi.enums.ServiceList;
+import smolka.smsapi.model.ActivationTarget;
+import smolka.smsapi.repository.ActivationTargetRepository;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -20,6 +21,8 @@ public class MainMapper {
 
     @Autowired
     private ModelMapper modelMapper;
+    @Autowired
+    private ActivationTargetRepository activationTargetRepository;
 
     private static final Integer SCALE = 2;
 
@@ -42,12 +45,13 @@ public class MainMapper {
         if (costMap == null || costMap.getCostMap().isEmpty()) {
             return internalCostMap;
         }
-        for (ServiceList service : costMap.getCostMap().keySet()) {
+        for (ActivationTarget service : costMap.getCostMap().keySet()) {
             Map<BigDecimal, Integer> costs = costMap.getCostMap().get(service);
             for (BigDecimal cost : costs.keySet()) {
                 BigDecimal newCost = new BigDecimal(cost.toString());
                 newCost = newCost.setScale(SCALE, RoundingMode.CEILING);
-                internalCostMap.addCostToMapWithAdd(service, newCost, costs.get(cost));
+                String internalServiceCode = service.getServiceCode();
+                internalCostMap.addCostToMapWithAdd(internalServiceCode, newCost, costs.get(cost));
             }
         }
         return internalCostMap;

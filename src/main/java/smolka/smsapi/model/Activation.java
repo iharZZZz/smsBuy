@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import smolka.smsapi.enums.SourceList;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
@@ -13,7 +14,9 @@ import java.time.LocalDateTime;
 @Table(name = "ACTIVATION")
 @Data
 @NamedEntityGraph(name = "activation.all", attributeNodes = {
-        @NamedAttributeNode("userKey")
+        @NamedAttributeNode("userKey"),
+        @NamedAttributeNode(value = "country"),
+        @NamedAttributeNode(value = "service")
 })
 @NoArgsConstructor
 @AllArgsConstructor
@@ -35,14 +38,17 @@ public class Activation {
     @Column(name = "MESSAGE")
     private String message;
 
-    @Column(name = "COUNTRY_CODE")
-    private String countryCode;
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
+    @JoinColumn(name = "COUNTRY_ID", referencedColumnName = "ID")
+    private Country country;
 
-    @Column(name = "SERVICE_CODE")
-    private String serviceCode;
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
+    @JoinColumn(name = "SERVICE_ID", referencedColumnName = "ID")
+    private ActivationTarget service;
 
     @Column(name = "SOURCE_NAME")
-    private String sourceName;
+    @Enumerated(value = EnumType.STRING)
+    private SourceList source;
 
     @Column(name = "SOURCE_ID")
     private Long sourceId;
@@ -55,6 +61,9 @@ public class Activation {
 
     @Column(name = "CLOSE_DATE")
     private LocalDateTime finishDate;
+
+    @Column(name = "PLANNED_CLOSE_DATE")
+    private LocalDateTime plannedFinishDate;
 
     @Column(name = "COST")
     private BigDecimal cost;

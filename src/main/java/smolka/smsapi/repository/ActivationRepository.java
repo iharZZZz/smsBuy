@@ -5,9 +5,17 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import smolka.smsapi.model.Activation;
 import smolka.smsapi.model.UserKey;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ActivationRepository extends JpaRepository<Activation, Long> {
+
+    @EntityGraph(value = "activation.all")
+    List<Activation> findAllActivationsByPlannedFinishDateLessThanEqual(LocalDateTime dateTime);
+
+    @EntityGraph(value = "activation.all")
+    List<Activation> findAllActivationsByStatus(Integer status);
+
     @EntityGraph(value = "activation.all")
     List<Activation> findAllActivationsByUserKey(UserKey userKey);
 

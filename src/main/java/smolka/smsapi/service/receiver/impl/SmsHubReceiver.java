@@ -8,18 +8,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import smolka.smsapi.dto.receiver.ReceiverActivationInfoDto;
-import smolka.smsapi.dto.receiver.ReceiverActivationStatusListDto;
+import smolka.smsapi.dto.receiver.ReceiverActivationStatusDto;
 import smolka.smsapi.dto.receiver.ReceiverCostMapDto;
 import smolka.smsapi.enums.*;
 import smolka.smsapi.enums.smshub.SmsHubErrorResponseDictionary;
 import smolka.smsapi.exception.InternalErrorException;
 import smolka.smsapi.exception.UnexpectedResponseException;
 import smolka.smsapi.mapper.SmsHubMapper;
+import smolka.smsapi.model.ActivationTarget;
+import smolka.smsapi.model.Country;
 import smolka.smsapi.service.receiver.RestReceiver;
 import smolka.smsapi.utils.SmsHubRequestCreator;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -36,7 +38,7 @@ public class SmsHubReceiver implements RestReceiver {
     private static final String RESOURCE_URL = "https://smshub.org/stubs/handler_api.php";
 
     @Override
-    public ReceiverActivationInfoDto orderActivation(CountryList country, ServiceList service) {
+    public ReceiverActivationInfoDto orderActivation(Country country, ActivationTarget service) {
         ResponseEntity<String> response = null;
         try {
             final String actionName = "getNumber";
@@ -57,7 +59,7 @@ public class SmsHubReceiver implements RestReceiver {
     }
 
     @Override
-    public ReceiverActivationStatusListDto  getActivationsStatus() {
+    public List<ReceiverActivationStatusDto> getActivationsStatus() {
         ResponseEntity<String> response = null;
         try {
             final String actionName = "getCurrentActivations";
@@ -65,10 +67,10 @@ public class SmsHubReceiver implements RestReceiver {
             response = restTemplate.postForEntity(RESOURCE_URL, request, String.class);
             Map<String, Object> activationStatusMap = smsHubMapper.getMapActivationsStatus(response.getBody());
             if (activationStatusMap.get("status") != null && activationStatusMap.get("status").equals("success")) {
-                return new ReceiverActivationStatusListDto(smsHubMapper.mapActivationsStatusResponse(activationStatusMap));
+                return smsHubMapper.mapActivationsStatusResponse(activationStatusMap);
             }
             if (activationStatusMap.get("msg") != null && activationStatusMap.get("msg").equals("no_activations")) {
-                return new ReceiverActivationStatusListDto(new ArrayList<>());
+                return new ArrayList<>();
             }
             throw new UnexpectedResponseException("Not successful json for activationsStatus", ErrorDictionary.UNKNOWN, response);
         }

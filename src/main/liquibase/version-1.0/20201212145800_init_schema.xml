@@ -20,18 +20,46 @@
             </column>
         </createTable>
 
+        <createTable tableName="COUNTRY">
+            <column name="ID" type="INT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="CODE" type="VARCHAR(10)">
+                <constraints unique="true"/>
+            </column>
+            <column name="SMSHUB_CODE" type="VARCHAR(10)">
+                <constraints unique="true"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="TARGET_SERVICE">
+            <column name="ID" type="INT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="CODE" type="VARCHAR(10)">
+                <constraints unique="true"/>
+            </column>
+            <column name="SMSHUB_CODE" type="VARCHAR(10)">
+                <constraints unique="true"/>
+            </column>
+        </createTable>
+
         <createTable tableName="ACTIVATION">
             <column name="ID" type="BIGINT" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
+
             <column name="KEY_ID" type="BIGINT"/>
             <column name="START_DATE" type="DATETIME"/>
             <column name="CLOSE_DATE" type="DATETIME"/>
+            <column name="PLANNED_CLOSE_DATE" type="DATETIME"/>
             <column name="STATUS" type="INTEGER"/>
             <column name="NUMBER" type="VARCHAR(100)"/>
             <column name="MESSAGE" type="VARCHAR(1000)"/>
-            <column name="COUNTRY_CODE" type="VARCHAR(10)"/>
-            <column name="SERVICE_CODE" type="VARCHAR(10)"/>
+
+            <column name="COUNTRY_ID" type="INT"/>
+            <column name="SERVICE_ID" type="INT"/>
+
             <column name="SOURCE_NAME" type="VARCHAR(20)"/>
             <column name="SOURCE_ID" type="BIGINT"/>
             <column name="COST" type="DECIMAL(23,5)"/>

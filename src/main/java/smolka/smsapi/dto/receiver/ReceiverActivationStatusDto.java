@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import smolka.smsapi.enums.ActivationStatus;
+import smolka.smsapi.enums.SourceList;
 
 import java.time.LocalDateTime;
 
@@ -15,4 +16,5 @@ public class ReceiverActivationStatusDto {
     private ActivationStatus activationStatus;
     private String message;
     private LocalDateTime createDate;
+    private SourceList source;
 }
