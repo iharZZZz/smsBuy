@@ -15,5 +15,5 @@ public interface ActivationService {
     Activation succeedActivation(Activation activation);
     List<Activation> findAllInternalCurrentActivations();
     List<Activation> findAllExpiredActivations();
-    ReceiverActivationInfoMap getReceiversCurrentActivations();
+    CommonReceiversActivationInfoMap getReceiversCurrentActivations();
 }

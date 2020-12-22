@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import smolka.smsapi.dto.ReceiverActivationInfoMap;
+import smolka.smsapi.dto.CommonReceiversActivationInfoMap;
 import smolka.smsapi.dto.receiver.ReceiverActivationStatusDto;
 import smolka.smsapi.enums.ActivationStatus;
 import smolka.smsapi.model.Activation;
@@ -46,7 +46,7 @@ public class MessageUpdater extends Thread {
 
     private void step() {
         List<Activation> currentActivations = activationService.findAllInternalCurrentActivations();
-        ReceiverActivationInfoMap receiverActivationInfoMap = activationService.getReceiversCurrentActivations();
+        CommonReceiversActivationInfoMap receiverActivationInfoMap = activationService.getReceiversCurrentActivations();
         for (Activation activation : currentActivations) {
             ReceiverActivationStatusDto receiverActivationStatus = receiverActivationInfoMap.getActivation(activation.getSource(), activation.getSourceId());
             if (receiverActivationStatus != null) {
@@ -55,6 +55,14 @@ public class MessageUpdater extends Thread {
                         && !receiverActivationStatus.getMessage().equals(activation.getMessage())) {
                     activationService.setMessageForActivation(activation, receiverActivationStatus.getMessage());
                 }
+            }
+        }
+        List<Activation> expiredActivations = activationService.findAllExpiredActivations();
+        for (Activation expiredActivation : expiredActivations) {
+            if (expiredActivation.getStatus().equals(ActivationStatus.SMS_RECEIVED.getCode())) {
+                activationService.succeedActivation(expiredActivation);
+            } else {
+                activationService.closeActivation(expiredActivation);
             }
         }
     }

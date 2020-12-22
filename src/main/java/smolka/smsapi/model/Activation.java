@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Table(name = "ACTIVATION")
 @Data
 @NamedEntityGraph(name = "activation.all", attributeNodes = {
-        @NamedAttributeNode("userKey"),
+        @NamedAttributeNode("user"),
         @NamedAttributeNode(value = "country"),
         @NamedAttributeNode(value = "service")
 })
@@ -29,8 +29,8 @@ public class Activation {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "KEY_ID", referencedColumnName = "ID")
-    private UserKey userKey;
+    @JoinColumn(name = "USER_ID", referencedColumnName = "ID")
+    private User user;
 
     @Column(name = "NUMBER")
     private String number;

@@ -10,7 +10,7 @@ import java.util.Map;
 
 @Getter
 @NoArgsConstructor
-public class ReceiverActivationInfoMap {
+public class CommonReceiversActivationInfoMap {
     private Map<SourceList, Map<Long, ReceiverActivationStatusDto>> receiverActivationInfo = new HashMap<>();
 
     public ReceiverActivationStatusDto getActivation(SourceList source, Long id) {

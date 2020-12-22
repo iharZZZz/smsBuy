@@ -8,15 +8,22 @@
 
     <changeSet  id="20201212145800"  author="ihar_smolka@senla.eu">
 
-        <createTable tableName="API_KEY">
+        <createTable tableName="USER">
             <column name="ID" type="BIGINT" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="USER_ID" type="BIGINT">
-                <constraints unique="true" nullable="false"/>
+            <column name="USERNAME" type="VARCHAR(20)">
+                <constraints unique="true"/>
+            </column>
+            <column name="PASSWORD" type="VARCHAR(150)"/>
+            <column name="EMAIL" type="VARCHAR(254)">
+                <constraints unique="true"/>
             </column>
             <column name="USER_KEY" type="VARCHAR(500)">
                 <constraints unique="true" nullable="false"/>
+            </column>
+            <column name="BALANCE" type="DECIMAL(23,5)">
+                <constraints nullable="false"/>
             </column>
         </createTable>
 
@@ -49,7 +56,7 @@
                 <constraints primaryKey="true" nullable="false"/>
             </column>
 
-            <column name="KEY_ID" type="BIGINT"/>
+            <column name="USER_ID" type="BIGINT"/>
             <column name="START_DATE" type="DATETIME"/>
             <column name="CLOSE_DATE" type="DATETIME"/>
             <column name="PLANNED_CLOSE_DATE" type="DATETIME"/>
@@ -64,5 +71,11 @@
             <column name="SOURCE_ID" type="BIGINT"/>
             <column name="COST" type="DECIMAL(23,5)"/>
         </createTable>
+
+        <addUniqueConstraint  clustered="false"
+                              columnNames="SOURCE_NAME, SOURCE_ID"
+                              constraintName="activ_unique_const"
+                              tableName="ACTIVATION"
+                              validate="true"/>
     </changeSet>
 </databaseChangeLog>

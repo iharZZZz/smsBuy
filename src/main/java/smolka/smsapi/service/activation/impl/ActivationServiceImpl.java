@@ -12,12 +12,12 @@ import smolka.smsapi.mapper.MainMapper;
 import smolka.smsapi.model.Activation;
 import smolka.smsapi.model.ActivationTarget;
 import smolka.smsapi.model.Country;
-import smolka.smsapi.model.UserKey;
+import smolka.smsapi.model.User;
 import smolka.smsapi.repository.ActivationRepository;
 import smolka.smsapi.repository.ActivationTargetRepository;
 import smolka.smsapi.repository.CountryRepository;
 import smolka.smsapi.service.activation.ActivationService;
-import smolka.smsapi.service.api_key.ApiKeyService;
+import smolka.smsapi.service.api_key.UserService;
 import smolka.smsapi.service.receiver.RestReceiver;
 
 import java.math.BigDecimal;
@@ -37,16 +37,19 @@ public class ActivationServiceImpl implements ActivationService {
     @Autowired
     private MainMapper mainMapper;
     @Autowired
-    private ApiKeyService apiKeyService;
+    private UserService userService;
     @Autowired
     private RestReceiver smsHubReceiver;
 
     @Override
     @Transactional
     public ServiceMessage<ActivationInfoDto> orderActivation(String apiKey, BigDecimal cost, String serviceCode, String countryCode) {
-        UserKey userKey = apiKeyService.findUserKey(apiKey);
-        if (userKey == null) {
+        User user = userService.findUserKey(apiKey);
+        if (user == null) {
             throw new InternalErrorException("Api key not exists", ErrorDictionary.WRONG_KEY);
+        }
+        if (user.getBalance().compareTo(cost) < 0) {
+            throw new InternalErrorException("User balance is empty", ErrorDictionary.NO_BALANCE);
         }
         ActivationTarget service = activationTargetRepository.findByServiceCodeRepository(serviceCode);
         Country country = countryRepository.findByCountryCode(countryCode);
@@ -55,17 +58,17 @@ public class ActivationServiceImpl implements ActivationService {
             throw new InternalErrorException("No numbers", ErrorDictionary.NO_NUMBER);
         }
         ReceiverActivationInfoDto receiverActivationInfo = smsHubReceiver.orderActivation(country, service);
-        ActivationInfoDto activationInfo = this.createActivation(receiverActivationInfo, userKey, country, service, SourceList.SMSHUB, cost);
+        ActivationInfoDto activationInfo = this.createActivation(receiverActivationInfo, user, country, service, SourceList.SMSHUB, cost);
         return new ServiceMessage<>(InternalStatus.OK.getStatusCode(), InternalStatus.OK.getStatusVal(), activationInfo);
     }
 
     @Override
     public ServiceMessage<ActivationStatusDto> getActivationForUser(String apiKey, Long id) {
-        UserKey userKey = apiKeyService.findUserKey(apiKey);
-        if (userKey == null) {
+        User user = userService.findUserKey(apiKey);
+        if (user == null) {
             throw new InternalErrorException("Api key not exists", ErrorDictionary.WRONG_KEY);
         }
-        Activation activation = activationRepository.findActivationByIdAndUserKey(id, userKey);
+        Activation activation = activationRepository.findActivationByIdAndUserKey(id, user);
         if (activation == null) {
             throw new InternalErrorException("This activation not exist", ErrorDictionary.NO_ACTIVATION);
         }
@@ -75,11 +78,11 @@ public class ActivationServiceImpl implements ActivationService {
 
     @Override
     public ServiceMessage<ActivationsStatusDto> getActivationsForUser(String apiKey) {
-        UserKey userKey = apiKeyService.findUserKey(apiKey);
-        if (userKey == null) {
+        User user = userService.findUserKey(apiKey);
+        if (user == null) {
             throw new InternalErrorException("Api key not exists", ErrorDictionary.WRONG_KEY);
         }
-        List<Activation> activations = activationRepository.findAllActivationsByUserKey(userKey);
+        List<Activation> activations = activationRepository.findAllActivationsByUserKey(user);
         List<ActivationStatusDto> activationStatusList = mainMapper.toListMapping(activations, ActivationStatusDto.class);
         ActivationsStatusDto activationsStatusDto = new ActivationsStatusDto(activationStatusList);
         return new ServiceMessage<>(InternalStatus.OK.getStatusCode(), InternalStatus.OK.getStatusVal(), activationsStatusDto);
@@ -99,6 +102,7 @@ public class ActivationServiceImpl implements ActivationService {
         activation.setFinishDate(LocalDateTime.now());
         activation.setStatus(ActivationStatus.CLOSED.getCode());
         activation = activationRepository.save(activation);
+        userService.addBalanceForUser(activation.getUser(), activation.getCost());
         return activation;
     }
 
@@ -108,6 +112,7 @@ public class ActivationServiceImpl implements ActivationService {
         activation.setStatus(ActivationStatus.SUCCEED.getCode());
         activation.setFinishDate(LocalDateTime.now());
         activation = activationRepository.save(activation);
+        userService.subBalanceForUser(activation.getUser(), activation.getCost());
         return activation;
     }
 
@@ -122,8 +127,8 @@ public class ActivationServiceImpl implements ActivationService {
     }
 
     @Override
-    public ReceiverActivationInfoMap getReceiversCurrentActivations() {
-        ReceiverActivationInfoMap receiverActivationInfoMap = new ReceiverActivationInfoMap();
+    public CommonReceiversActivationInfoMap getReceiversCurrentActivations() {
+        CommonReceiversActivationInfoMap receiverActivationInfoMap = new CommonReceiversActivationInfoMap();
         List<ReceiverActivationStatusDto> receiverActivationStatusList = smsHubReceiver.getActivationsStatus();
         for (ReceiverActivationStatusDto receiverActivation : receiverActivationStatusList) {
             receiverActivationInfoMap.addActivationInfo(receiverActivation);
@@ -135,14 +140,14 @@ public class ActivationServiceImpl implements ActivationService {
 
     @Transactional
     private ActivationInfoDto createActivation(ReceiverActivationInfoDto receiverActivationInfo,
-                                               UserKey userKey,
+                                               User user,
                                                Country country,
                                                ActivationTarget service,
                                                SourceList source,
                                                BigDecimal cost) {
         LocalDateTime createDate = LocalDateTime.now();
         Activation activation = Activation.builder()
-                .userKey(userKey)
+                .user(user)
                 .number(receiverActivationInfo.getNumber())
                 .message(null)
                 .country(country)
