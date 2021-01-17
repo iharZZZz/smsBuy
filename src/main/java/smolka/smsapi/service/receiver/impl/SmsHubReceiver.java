@@ -2,6 +2,7 @@ package smolka.smsapi.service.receiver.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -35,7 +36,8 @@ public class SmsHubReceiver implements RestReceiver {
     private SmsHubMapper smsHubMapper;
 
     private static final String SMS_HUB_API_KEY = "41034U7522c7f9198b7c2c479af2cff698870c";
-    private static final String RESOURCE_URL = "https://smshub.org/stubs/handler_api.php";
+    @Value(value = "${sms.api.smshub_url}")
+    private String smsHubUrl;
 
     @Override
     public ReceiverActivationInfoDto orderActivation(Country country, ActivationTarget service) {
@@ -43,7 +45,7 @@ public class SmsHubReceiver implements RestReceiver {
         try {
             final String actionName = "getNumber";
             HttpEntity<MultiValueMap<String, String>> request = SmsHubRequestCreator.createOrderRequest(SMS_HUB_API_KEY, actionName, country, service);
-            response = restTemplate.postForEntity(RESOURCE_URL, request, String.class);
+            response = restTemplate.postForEntity(smsHubUrl, request, String.class);
             if (response.getBody() != null && response.getBody().contains("ACCESS_NUMBER")) {
                 return smsHubMapper.extractActivationInfoFromResponse(response.getBody());
             } else {
@@ -64,7 +66,7 @@ public class SmsHubReceiver implements RestReceiver {
         try {
             final String actionName = "getCurrentActivations";
             HttpEntity<MultiValueMap<String, String>> request = SmsHubRequestCreator.createEmptyRequest(SMS_HUB_API_KEY, actionName);
-            response = restTemplate.postForEntity(RESOURCE_URL, request, String.class);
+            response = restTemplate.postForEntity(smsHubUrl, request, String.class);
             Map<String, Object> activationStatusMap = smsHubMapper.getMapActivationsStatus(response.getBody());
             if (activationStatusMap.get("status") != null && activationStatusMap.get("status").equals("success")) {
                 return smsHubMapper.mapActivationsStatusResponse(activationStatusMap);
@@ -87,7 +89,7 @@ public class SmsHubReceiver implements RestReceiver {
         try {
             final String actionName = "getNumbersStatusAndCostHubFree";
             HttpEntity<MultiValueMap<String, String>> request = SmsHubRequestCreator.createEmptyRequest(SMS_HUB_API_KEY, actionName);
-            response = restTemplate.postForEntity(RESOURCE_URL, request, String.class);
+            response = restTemplate.postForEntity(smsHubUrl, request, String.class);
             if (response.getStatusCode().is2xxSuccessful() && !SmsHubErrorResponseDictionary.isError(response.getBody())) {
                 return smsHubMapper.mapCostMapForSmsHubJson(response.getBody());
             } else {
