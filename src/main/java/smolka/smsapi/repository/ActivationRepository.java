@@ -17,10 +17,10 @@ public interface ActivationRepository extends JpaRepository<Activation, Long> {
     List<Activation> findAllActivationsByStatus(Integer status);
 
     @EntityGraph(value = "activation.all")
-    List<Activation> findAllActivationsByUserKey(User user);
+    List<Activation> findAllActivationsByUser(User user);
 
     @EntityGraph(value = "activation.all")
-    Activation findActivationByIdAndUserKey(Long id, User user);
+    Activation findActivationByIdAndUser(Long id, User user);
 
     @EntityGraph(value = "activation.all")
     Activation findActivationById(Long id);

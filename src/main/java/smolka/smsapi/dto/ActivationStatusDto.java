@@ -20,5 +20,6 @@ public class ActivationStatusDto {
     private Integer status;
     private LocalDateTime createDate;
     private LocalDateTime finishDate;
+    private String message;
     private BigDecimal cost;
 }

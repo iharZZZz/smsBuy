@@ -3,8 +3,12 @@ package smolka.smsapi.mapper;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import smolka.smsapi.dto.ActivationInfoDto;
+import smolka.smsapi.dto.ActivationStatusDto;
 import smolka.smsapi.dto.CostMapDto;
+import smolka.smsapi.dto.receiver.ReceiverActivationStatusDto;
 import smolka.smsapi.dto.receiver.ReceiverCostMapDto;
+import smolka.smsapi.model.Activation;
 import smolka.smsapi.model.ActivationTarget;
 import smolka.smsapi.repository.ActivationTargetRepository;
 
@@ -55,5 +59,19 @@ public class MainMapper {
             }
         }
         return internalCostMap;
+    }
+
+    public ActivationStatusDto mapActivationStatusFromActivation(Activation activation) {
+        ActivationStatusDto activationStatus = mapping(activation, ActivationStatusDto.class);
+        activationStatus.setCountryCode(activation.getCountry().getCountryCode());
+        activationStatus.setServiceCode(activation.getService().getServiceCode());
+        return activationStatus;
+    }
+
+    public ActivationInfoDto mapActivationInfoFromActivation(Activation activation) {
+        ActivationInfoDto activationInfo = mapping(activation, ActivationInfoDto.class);
+        activationInfo.setCountryCode(activation.getCountry().getCountryCode());
+        activationInfo.setServiceCode(activation.getService().getServiceCode());
+        return activationInfo;
     }
 }

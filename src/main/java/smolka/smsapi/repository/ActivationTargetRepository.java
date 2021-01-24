@@ -7,5 +7,5 @@ import java.util.List;
 
 public interface ActivationTargetRepository extends JpaRepository<ActivationTarget, Integer> {
     List<ActivationTarget> findAll();
-    ActivationTarget findByServiceCodeRepository(String serviceCode);
+    ActivationTarget findByServiceCode(String serviceCode);
 }

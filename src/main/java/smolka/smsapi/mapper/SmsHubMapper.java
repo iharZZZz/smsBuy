@@ -38,9 +38,9 @@ public class SmsHubMapper {
                     status = ActivationStatus.SMS_RECEIVED;
                 }
             }
-            final String code = element.get("code").toString();
-            final LocalDateTime createDate = LocalDateTime.parse(element.get("createDate").toString());
-            ReceiverActivationStatusDto activationStatus = new ReceiverActivationStatusDto(id, status, code, createDate, SourceList.SMSHUB);
+            final String code = element.get("code") != null ? element.get("code").toString() : null;
+//            final LocalDateTime createDate = LocalDateTime.parse(element.get("createDate").toString()); TODO а зачем оно мне???
+            ReceiverActivationStatusDto activationStatus = new ReceiverActivationStatusDto(id, status, code, null, SourceList.SMSHUB);
             activationStatusList.add(activationStatus);
         }
         return activationStatusList;

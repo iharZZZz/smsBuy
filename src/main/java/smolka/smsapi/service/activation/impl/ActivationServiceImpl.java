@@ -23,6 +23,7 @@ import smolka.smsapi.service.receiver.RestReceiver;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ActivationServiceImpl implements ActivationService {
@@ -51,7 +52,7 @@ public class ActivationServiceImpl implements ActivationService {
         if (user.getBalance().compareTo(cost) < 0) {
             throw new InternalErrorException("User balance is empty", ErrorDictionary.NO_BALANCE);
         }
-        ActivationTarget service = activationTargetRepository.findByServiceCodeRepository(serviceCode);
+        ActivationTarget service = activationTargetRepository.findByServiceCode(serviceCode);
         Country country = countryRepository.findByCountryCode(countryCode);
         CostMapDto costMap = mainMapper.mapToInternalCostMap(smsHubReceiver.getCostMap());
         if (!costMap.isExists(service.getServiceCode(), cost)) {
@@ -68,11 +69,11 @@ public class ActivationServiceImpl implements ActivationService {
         if (user == null) {
             throw new InternalErrorException("Api key not exists", ErrorDictionary.WRONG_KEY);
         }
-        Activation activation = activationRepository.findActivationByIdAndUserKey(id, user);
+        Activation activation = activationRepository.findActivationByIdAndUser(id, user);
         if (activation == null) {
             throw new InternalErrorException("This activation not exist", ErrorDictionary.NO_ACTIVATION);
         }
-        ActivationStatusDto activationStatus = mainMapper.mapping(activation, ActivationStatusDto.class);
+        ActivationStatusDto activationStatus = mainMapper.mapActivationStatusFromActivation(activation);
         return new ServiceMessage<>(InternalStatus.OK.getStatusCode(), InternalStatus.OK.getStatusVal(), activationStatus);
     }
 
@@ -82,8 +83,8 @@ public class ActivationServiceImpl implements ActivationService {
         if (user == null) {
             throw new InternalErrorException("Api key not exists", ErrorDictionary.WRONG_KEY);
         }
-        List<Activation> activations = activationRepository.findAllActivationsByUserKey(user);
-        List<ActivationStatusDto> activationStatusList = mainMapper.toListMapping(activations, ActivationStatusDto.class);
+        List<Activation> activations = activationRepository.findAllActivationsByUser(user);
+        List<ActivationStatusDto> activationStatusList = activations.stream().map(a -> mainMapper.mapActivationStatusFromActivation(a)).collect(Collectors.toList()); // TODO когда вынесу все остальное в маппер поправить и здесь
         ActivationsStatusDto activationsStatusDto = new ActivationsStatusDto(activationStatusList);
         return new ServiceMessage<>(InternalStatus.OK.getStatusCode(), InternalStatus.OK.getStatusVal(), activationsStatusDto);
     }
@@ -146,7 +147,7 @@ public class ActivationServiceImpl implements ActivationService {
                                                SourceList source,
                                                BigDecimal cost) {
         LocalDateTime createDate = LocalDateTime.now();
-        Activation activation = Activation.builder()
+        Activation activation = Activation.builder() // TODO в маппер
                 .user(user)
                 .number(receiverActivationInfo.getNumber())
                 .message(null)
@@ -161,6 +162,6 @@ public class ActivationServiceImpl implements ActivationService {
                 .cost(cost)
                 .build();
         activation = activationRepository.save(activation);
-        return mainMapper.mapping(activation, ActivationInfoDto.class);
+        return mainMapper.mapActivationInfoFromActivation(activation);
     }
 }

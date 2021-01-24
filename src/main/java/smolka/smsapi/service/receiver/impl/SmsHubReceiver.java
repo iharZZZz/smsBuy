@@ -78,7 +78,8 @@ public class SmsHubReceiver implements RestReceiver {
         }
         catch (Exception exc) {
             String errorResponse = response == null || response.getBody() == null ? "NULL" :response.getBody();
-            log.error("error processing cost map " + errorResponse);
+            log.error("error processing activations status " + errorResponse);
+            log.error("error in activations status", exc);
             throw new InternalErrorException(exc.getMessage());
         }
     }

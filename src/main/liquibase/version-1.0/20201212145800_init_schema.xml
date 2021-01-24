@@ -6,7 +6,7 @@
         http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd"
         logicalFilePath="20201212145800_init_schema.xml">
 
-    <changeSet  id="20201212145800"  author="ihar_smolka@senla.eu">
+    <changeSet id="20201212145800"  author="ihar_smolka@senla.eu">
 
         <createTable tableName="USER">
             <column name="ID" type="BIGINT" autoIncrement="true">
@@ -31,10 +31,10 @@
             <column name="ID" type="INT" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="CODE" type="VARCHAR(10)">
+            <column name="CODE" type="VARCHAR(20)">
                 <constraints unique="true"/>
             </column>
-            <column name="SMSHUB_CODE" type="VARCHAR(10)">
+            <column name="SMSHUB_CODE" type="VARCHAR(20)">
                 <constraints unique="true"/>
             </column>
         </createTable>
@@ -43,10 +43,10 @@
             <column name="ID" type="INT" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="CODE" type="VARCHAR(10)">
+            <column name="CODE" type="VARCHAR(20)">
                 <constraints unique="true"/>
             </column>
-            <column name="SMSHUB_CODE" type="VARCHAR(10)">
+            <column name="SMSHUB_CODE" type="VARCHAR(20)">
                 <constraints unique="true"/>
             </column>
         </createTable>
