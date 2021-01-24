@@ -45,7 +45,7 @@ public class MessageUpdater extends Thread {
     }
 
     private void step() {
-        List<Activation> currentActivations = activationService.findAllInternalCurrentActivations();
+        List<Activation> currentActivations = activationService.findAllInternalActiveActivations();
         CommonReceiversActivationInfoMap receiverActivationInfoMap = activationService.getReceiversCurrentActivations();
         for (Activation activation : currentActivations) {
             ReceiverActivationStatusDto receiverActivationStatus = receiverActivationInfoMap.getActivation(activation.getSource(), activation.getSourceId());
@@ -60,7 +60,7 @@ public class MessageUpdater extends Thread {
         List<Activation> expiredActivations = activationService.findAllExpiredActivations();
         for (Activation expiredActivation : expiredActivations) {
             if (expiredActivation.getStatus().equals(ActivationStatus.SMS_RECEIVED.getCode())) {
-                activationService.succeedActivation(expiredActivation);
+                activationService.succeedActivation(expiredActivation); //TODO: может получится делать это все одним методом? оптом? надо подумать над балансом
             } else {
                 activationService.closeActivation(expiredActivation);
             }

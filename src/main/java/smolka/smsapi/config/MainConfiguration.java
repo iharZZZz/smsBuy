@@ -1,5 +1,9 @@
 package smolka.smsapi.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import liquibase.integration.spring.SpringLiquibase;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
@@ -23,7 +27,6 @@ import javax.sql.DataSource;
 import java.util.Properties;
 
 @Configuration
-@EnableAutoConfiguration
 @EnableJpaRepositories(basePackages = { "smolka.smsapi.repository" },
         entityManagerFactoryRef = "emF",
         transactionManagerRef = "tm")

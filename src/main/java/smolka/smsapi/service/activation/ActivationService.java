@@ -9,11 +9,11 @@ import java.util.List;
 public interface ActivationService {
     ServiceMessage<ActivationInfoDto> orderActivation(String apiKey, BigDecimal cost, String serviceCode, String countryCode);
     ServiceMessage<ActivationStatusDto> getActivationForUser(String apiKey, Long id);
-    ServiceMessage<ActivationsStatusDto> getActivationsForUser(String apiKey);
+    ServiceMessage<ActivationsStatusDto> getCurrentActivationsForUser(String apiKey);
     void setMessageForActivation(Activation activation, String message);
     Activation closeActivation(Activation activation);
     Activation succeedActivation(Activation activation);
-    List<Activation> findAllInternalCurrentActivations();
+    List<Activation> findAllInternalActiveActivations();
     List<Activation> findAllExpiredActivations();
     CommonReceiversActivationInfoMap getReceiversCurrentActivations();
 }

@@ -13,7 +13,6 @@ import smolka.smsapi.model.ActivationTarget;
 import smolka.smsapi.repository.ActivationTargetRepository;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -39,8 +38,7 @@ public class SmsHubMapper {
                 }
             }
             final String code = element.get("code") != null ? element.get("code").toString() : null;
-//            final LocalDateTime createDate = LocalDateTime.parse(element.get("createDate").toString()); TODO а зачем оно мне???
-            ReceiverActivationStatusDto activationStatus = new ReceiverActivationStatusDto(id, status, code, null, SourceList.SMSHUB);
+            ReceiverActivationStatusDto activationStatus = new ReceiverActivationStatusDto(id, status, code, SourceList.SMSHUB);
             activationStatusList.add(activationStatus);
         }
         return activationStatusList;

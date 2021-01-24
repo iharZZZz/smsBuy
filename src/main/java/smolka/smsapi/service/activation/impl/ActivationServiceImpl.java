@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 @Service
 public class ActivationServiceImpl implements ActivationService {
 
-    private static final Integer MINUTES_FOR_ACTIVATION = 20;
+    private static final Integer MINUTES_FOR_ACTIVATION = 1;
     @Autowired
     private ActivationRepository activationRepository;
     @Autowired
@@ -78,12 +78,12 @@ public class ActivationServiceImpl implements ActivationService {
     }
 
     @Override
-    public ServiceMessage<ActivationsStatusDto> getActivationsForUser(String apiKey) {
+    public ServiceMessage<ActivationsStatusDto> getCurrentActivationsForUser(String apiKey) {
         User user = userService.findUserKey(apiKey);
         if (user == null) {
             throw new InternalErrorException("Api key not exists", ErrorDictionary.WRONG_KEY);
         }
-        List<Activation> activations = activationRepository.findAllActivationsByUser(user);
+        List<Activation> activations = activationRepository.findAllCurrentActivationsByUser(user);
         List<ActivationStatusDto> activationStatusList = activations.stream().map(a -> mainMapper.mapActivationStatusFromActivation(a)).collect(Collectors.toList()); // TODO когда вынесу все остальное в маппер поправить и здесь
         ActivationsStatusDto activationsStatusDto = new ActivationsStatusDto(activationStatusList);
         return new ServiceMessage<>(InternalStatus.OK.getStatusCode(), InternalStatus.OK.getStatusVal(), activationsStatusDto);
@@ -118,7 +118,7 @@ public class ActivationServiceImpl implements ActivationService {
     }
 
     @Override
-    public List<Activation> findAllInternalCurrentActivations() {
+    public List<Activation> findAllInternalActiveActivations() {
         return activationRepository.findAllActivationsByStatus(ActivationStatus.ACTIVE.getCode());
     }
 

@@ -15,6 +15,5 @@ public class ReceiverActivationStatusDto {
     private Long id;
     private ActivationStatus activationStatus;
     private String message;
-    private LocalDateTime createDate;
     private SourceList source;
 }
