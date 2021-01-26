@@ -1,6 +1,7 @@
 package smolka.smsapi.service.activation.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import smolka.smsapi.dto.*;
@@ -28,7 +29,8 @@ import java.util.stream.Collectors;
 @Service
 public class ActivationServiceImpl implements ActivationService {
 
-    private static final Integer MINUTES_FOR_ACTIVATION = 1;
+    @Value("${sms.api.minutes_for_activation:20}")
+    private Integer minutesForActivation;
     @Autowired
     private ActivationRepository activationRepository;
     @Autowired
@@ -156,7 +158,7 @@ public class ActivationServiceImpl implements ActivationService {
                 .source(source)
                 .createDate(LocalDateTime.now())
                 .finishDate(null)
-                .plannedFinishDate(createDate.plusMinutes(MINUTES_FOR_ACTIVATION))
+                .plannedFinishDate(createDate.plusMinutes(minutesForActivation))
                 .sourceId(receiverActivationInfo.getId())
                 .status(ActivationStatus.ACTIVE.getCode())
                 .cost(cost)

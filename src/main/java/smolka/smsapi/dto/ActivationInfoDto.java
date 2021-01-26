@@ -1,5 +1,6 @@
 package smolka.smsapi.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,6 +19,7 @@ public class ActivationInfoDto {
     private String countryCode;
     private String serviceCode;
     private Integer status;
+    @JsonFormat(pattern = "dd.MM.yyyy HH:mm:ss")
     private LocalDateTime createDate;
     private BigDecimal cost;
 }
