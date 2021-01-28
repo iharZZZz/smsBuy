@@ -14,7 +14,6 @@ import smolka.smsapi.dto.receiver.ReceiverCostMapDto;
 import smolka.smsapi.enums.*;
 import smolka.smsapi.enums.smshub.SmsHubErrorResponseDictionary;
 import smolka.smsapi.exception.InternalErrorException;
-import smolka.smsapi.exception.UnexpectedResponseException;
 import smolka.smsapi.mapper.SmsHubMapper;
 import smolka.smsapi.model.ActivationTarget;
 import smolka.smsapi.model.Country;
@@ -49,14 +48,14 @@ public class SmsHubReceiver implements RestReceiver {
             if (response.getBody() != null && response.getBody().contains("ACCESS_NUMBER")) {
                 return smsHubMapper.extractActivationInfoFromResponse(response.getBody());
             } else {
-                ErrorDictionary error = SmsHubErrorResponseDictionary.getError(response.getBody());
-                throw new UnexpectedResponseException("Not successful json at orderActivation method", error, response);
+                throw new Exception("Not successful json at orderActivation method");
             }
         }
         catch (Exception exc) {
-            String errorMessage = response == null || response.getBody() == null ? "NULL" : response.getBody();
+            String errorMessage = response == null || response.getBody() == null ? "" : response.getBody();
+            ErrorDictionary error = SmsHubErrorResponseDictionary.getError(errorMessage);
             log.error("error processing order with response " +errorMessage);
-            throw new InternalErrorException(exc.getMessage());
+            throw new InternalErrorException(exc.getMessage(), error);
         }
     }
 
@@ -74,13 +73,13 @@ public class SmsHubReceiver implements RestReceiver {
             if (activationStatusMap.get("msg") != null && activationStatusMap.get("msg").equals("no_activations")) {
                 return new ArrayList<>();
             }
-            throw new UnexpectedResponseException("Not successful json for activationsStatus", ErrorDictionary.UNKNOWN, response);
+            throw new Exception("Not successful json at orderActivation method");
         }
         catch (Exception exc) {
             String errorResponse = response == null || response.getBody() == null ? "NULL" :response.getBody();
             log.error("error processing activations status " + errorResponse);
-            log.error("error in activations status", exc);
-            throw new InternalErrorException(exc.getMessage());
+            ErrorDictionary error = SmsHubErrorResponseDictionary.getError(errorResponse);
+            throw new InternalErrorException(exc.getMessage(), error);
         }
     }
 
@@ -94,13 +93,13 @@ public class SmsHubReceiver implements RestReceiver {
             if (response.getStatusCode().is2xxSuccessful() && !SmsHubErrorResponseDictionary.isError(response.getBody())) {
                 return smsHubMapper.mapCostMapForSmsHubJson(response.getBody());
             } else {
-                ErrorDictionary error = SmsHubErrorResponseDictionary.getError(response.getBody());
-                throw new UnexpectedResponseException("Not successful json at getCostMap method", error, response);
+                throw new Exception("Not successful json at getCostMap method");
             }
         } catch (Exception exc) {
             String errorResponse = response == null || response.getBody() == null ? "NULL" :response.getBody();
             log.error("error processing cost map " + errorResponse);
-            throw new InternalErrorException(exc.getMessage());
+            ErrorDictionary error = SmsHubErrorResponseDictionary.getError(errorResponse);
+            throw new InternalErrorException(exc.getMessage(), error);
         }
     }
 }

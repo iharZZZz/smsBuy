@@ -1,7 +1,9 @@
 package smolka.smsapi.exception;
 
+import lombok.Getter;
 import smolka.smsapi.enums.ErrorDictionary;
 
+@Getter
 public class InternalErrorException extends RuntimeException {
 
     private ErrorDictionary error;
