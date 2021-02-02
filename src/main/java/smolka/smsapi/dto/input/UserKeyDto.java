@@ -1,4 +1,4 @@
-package smolka.smsapi.dto;
+package smolka.smsapi.dto.input;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;

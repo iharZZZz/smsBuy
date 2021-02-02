@@ -13,6 +13,7 @@
             <column name="EMAIL" value="1111111@mail.ru"/>
             <column name="USER_KEY" value="123456"/>
             <column name="BALANCE" value="10000"/>
+            <column name="FREEZE_BALANCE" value="0"/>
         </insert>
     </changeSet>
 </databaseChangeLog>

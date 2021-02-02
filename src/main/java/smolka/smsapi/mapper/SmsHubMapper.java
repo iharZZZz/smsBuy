@@ -51,7 +51,7 @@ public class SmsHubMapper {
     public ReceiverActivationInfoDto extractActivationInfoFromResponse(String response) {
         final String activationNumber = response.substring(response.lastIndexOf(":") + 1);
         final Long activationId = Long.parseLong(response.substring(response.indexOf(":") + 1, response.lastIndexOf(":")));
-        return new ReceiverActivationInfoDto(activationId, activationNumber);
+        return new ReceiverActivationInfoDto(activationId, activationNumber, SourceList.SMSHUB);
     }
 
     public ReceiverCostMapDto mapCostMapForSmsHubJson(String response) throws JsonProcessingException {

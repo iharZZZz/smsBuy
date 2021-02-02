@@ -23,7 +23,10 @@ import smolka.smsapi.service.receiver.RestReceiver;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -51,7 +54,7 @@ public class ActivationServiceImpl implements ActivationService {
         if (user == null) {
             throw new InternalErrorException("Api key not exists", ErrorDictionary.WRONG_KEY);
         }
-        if (user.getBalance().compareTo(cost) < 0) {
+        if (user.getBalance().compareTo(cost) < 0) { // TODO: слабое место
             throw new InternalErrorException("User balance is empty", ErrorDictionary.NO_BALANCE);
         }
         ActivationTarget service = activationTargetRepository.findByServiceCode(serviceCode);
@@ -61,7 +64,8 @@ public class ActivationServiceImpl implements ActivationService {
             throw new InternalErrorException("No numbers", ErrorDictionary.NO_NUMBER);
         }
         ReceiverActivationInfoDto receiverActivationInfo = smsHubReceiver.orderActivation(country, service);
-        ActivationInfoDto activationInfo = this.createActivation(receiverActivationInfo, user, country, service, SourceList.SMSHUB, cost);
+        ActivationInfoDto activationInfo = this.createActivation(receiverActivationInfo, user, country, service, cost);
+        userService.subFromRealBalanceAndAddToFreeze(user, cost);
         return new ServiceMessage<>(InternalStatus.OK.getStatusCode(), InternalStatus.OK.getStatusVal(), activationInfo);
     }
 
@@ -100,33 +104,54 @@ public class ActivationServiceImpl implements ActivationService {
     }
 
     @Override
-    @Transactional
-    public Activation closeActivation(Activation activation) {
-        activation.setFinishDate(LocalDateTime.now());
-        activation.setStatus(ActivationStatus.CLOSED.getCode());
-        activation = activationRepository.save(activation);
-        userService.addBalanceForUser(activation.getUser(), activation.getCost());
-        return activation;
-    }
-
-    @Override
-    @Transactional
-    public Activation succeedActivation(Activation activation) {
-        activation.setStatus(ActivationStatus.SUCCEED.getCode());
-        activation.setFinishDate(LocalDateTime.now());
-        activation = activationRepository.save(activation);
-        userService.subBalanceForUser(activation.getUser(), activation.getCost());
-        return activation;
-    }
-
-    @Override
     public List<Activation> findAllInternalActiveActivations() {
         return activationRepository.findAllActivationsByStatus(ActivationStatus.ACTIVE.getCode());
     }
 
     @Override
-    public List<Activation> findAllExpiredActivations() {
-        return activationRepository.findAllActivationsByPlannedFinishDateLessThanEqual(LocalDateTime.now());
+    @Transactional
+    public void closeActivationsForUser(User user, List<Activation> activationsForClose) {
+        if (activationsForClose.isEmpty()) {
+            return;
+        }
+        for (Activation activation : activationsForClose) {
+            activation.setFinishDate(LocalDateTime.now());
+            activation.setStatus(ActivationStatus.CLOSED.getCode());
+        }
+        activationRepository.saveAll(activationsForClose);
+        BigDecimal sum = activationsForClose.stream()
+                .map(Activation::getCost)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        userService.subFromFreezeAndAddToRealBalance(user, sum);
+    }
+
+    @Override
+    @Transactional
+    public void succeedActivationsForUser(User user, List<Activation> activationsForSucceed) {
+        if (activationsForSucceed.isEmpty()) {
+            return;
+        }
+        for (Activation activation : activationsForSucceed) {
+            activation.setFinishDate(LocalDateTime.now());
+            activation.setStatus(ActivationStatus.SUCCEED.getCode());
+        }
+        activationRepository.saveAll(activationsForSucceed);
+        BigDecimal sum = activationsForSucceed.stream()
+                .map(Activation::getCost)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        userService.subFromFreeze(user, sum);
+    }
+
+    @Override
+    public Map<User, List<Activation>> findAllExpiredActivationsForUsers() {
+        List<Activation> expiredActivations = activationRepository.findAllActivationsByPlannedFinishDateLessThanEqual(LocalDateTime.now());
+        Map<User, List<Activation>> resultMap = new HashMap<>();
+        for (Activation activation : expiredActivations) {
+            User userForActivation = activation.getUser();
+            resultMap.computeIfAbsent(userForActivation, k -> new ArrayList<>());
+            resultMap.get(userForActivation).add(activation);
+        }
+        return resultMap;
     }
 
     @Override
@@ -146,7 +171,6 @@ public class ActivationServiceImpl implements ActivationService {
                                                User user,
                                                Country country,
                                                ActivationTarget service,
-                                               SourceList source,
                                                BigDecimal cost) {
         LocalDateTime createDate = LocalDateTime.now();
         Activation activation = Activation.builder() // TODO в маппер
@@ -155,7 +179,7 @@ public class ActivationServiceImpl implements ActivationService {
                 .message(null)
                 .country(country)
                 .service(service)
-                .source(source)
+                .source(receiverActivationInfo.getSource())
                 .createDate(LocalDateTime.now())
                 .finishDate(null)
                 .plannedFinishDate(createDate.plusMinutes(minutesForActivation))

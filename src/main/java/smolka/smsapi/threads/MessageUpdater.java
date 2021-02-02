@@ -8,10 +8,13 @@ import smolka.smsapi.dto.CommonReceiversActivationInfoMap;
 import smolka.smsapi.dto.receiver.ReceiverActivationStatusDto;
 import smolka.smsapi.enums.ActivationStatus;
 import smolka.smsapi.model.Activation;
+import smolka.smsapi.model.User;
 import smolka.smsapi.service.activation.ActivationService;
 
 import javax.annotation.PostConstruct;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Slf4j
@@ -44,7 +47,7 @@ public class MessageUpdater extends Thread {
         // TODO: здесь надо падать
     }
 
-    private void step() {
+    private void setMessageForActivationsStep() {
         List<Activation> currentActivations = activationService.findAllInternalActiveActivations();
         CommonReceiversActivationInfoMap receiverActivationInfoMap = activationService.getReceiversCurrentActivations();
         for (Activation activation : currentActivations) {
@@ -57,13 +60,28 @@ public class MessageUpdater extends Thread {
                 }
             }
         }
-        List<Activation> expiredActivations = activationService.findAllExpiredActivations();
-        for (Activation expiredActivation : expiredActivations) {
-            if (expiredActivation.getStatus().equals(ActivationStatus.SMS_RECEIVED.getCode())) {
-                activationService.succeedActivation(expiredActivation); //TODO: может получится делать это все одним методом? оптом? надо подумать над балансом
-            } else {
-                activationService.closeActivation(expiredActivation);
-            }
+    }
+
+    private void closeExpiredActivationsStep() {
+        Map<User, List<Activation>> expiredActivationsPerUser = activationService.findAllExpiredActivationsForUsers();
+        for (User user : expiredActivationsPerUser.keySet()) {
+            List<Activation> allExpiredActivations = expiredActivationsPerUser.get(user);
+            List<Activation> activationsForClose = new ArrayList<>();
+            List<Activation> activationsForSucceed = new ArrayList<>();
+            allExpiredActivations.forEach(a -> {
+                if (a.getStatus().equals(ActivationStatus.SMS_RECEIVED.getCode())) {
+                    activationsForSucceed.add(a);
+                } else {
+                    activationsForClose.add(a);
+                }
+            });
+            activationService.succeedActivationsForUser(user, activationsForSucceed);
+            activationService.closeActivationsForUser(user, activationsForClose);
         }
+    }
+
+    private void step() {
+        setMessageForActivationsStep();
+        closeExpiredActivationsStep();
     }
 }

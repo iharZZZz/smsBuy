@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import smolka.smsapi.dto.ServiceMessage;
+import smolka.smsapi.enums.ErrorDictionary;
 import smolka.smsapi.enums.InternalStatus;
 import smolka.smsapi.exception.InternalErrorException;
 
@@ -17,7 +18,8 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(InternalErrorException.class)
     public ResponseEntity<ServiceMessage<String>> handleException(InternalErrorException exc) {
         logger.error("Exception in exception handler", exc);
-        ServiceMessage<String> serviceMessage = new ServiceMessage<>(exc.getError().getErrorCode(), InternalStatus.ERROR.getStatusVal(), exc.getError().getErrorMessage());
+        Integer errorCode = exc.getError() != null ? exc.getError().getErrorCode() : ErrorDictionary.UNKNOWN.getErrorCode();
+        ServiceMessage<String> serviceMessage = new ServiceMessage<>(errorCode, InternalStatus.ERROR.getStatusVal(), exc.getError().getErrorMessage());
         return new ResponseEntity<>(serviceMessage, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

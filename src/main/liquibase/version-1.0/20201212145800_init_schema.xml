@@ -25,6 +25,9 @@
             <column name="BALANCE" type="DECIMAL(23,5)">
                 <constraints nullable="false"/>
             </column>
+            <column name="FREEZE_BALANCE" type="DECIMAL(23,5)">
+                <constraints nullable="false"/>
+            </column>
         </createTable>
 
         <createTable tableName="COUNTRY">

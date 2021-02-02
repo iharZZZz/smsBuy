@@ -5,7 +5,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import smolka.smsapi.dto.UserKeyDto;
+import smolka.smsapi.dto.ServiceMessage;
+import smolka.smsapi.dto.UserDto;
+import smolka.smsapi.dto.input.UserKeyDto;
+import smolka.smsapi.enums.InternalStatus;
 import smolka.smsapi.exception.InternalErrorException;
 import smolka.smsapi.mapper.MainMapper;
 import smolka.smsapi.model.User;
@@ -29,6 +32,8 @@ public class UserServiceImpl implements UserService {
     public UserKeyDto create(UserKeyDto userKey) {
         try {
             User userEntity = mainMapper.mapping(userKey, User.class);
+            userEntity.setFreezeBalance(BigDecimal.ZERO);
+            userEntity.setBalance(BigDecimal.ZERO);
             return mainMapper.mapping(userRepository.save(userEntity), UserKeyDto.class);
         }
         catch (Exception e) {
@@ -74,16 +79,51 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional(propagation = Propagation.MANDATORY)
-    public void addBalanceForUser(User user, BigDecimal money) {
-        user.setBalance(user.getBalance().add(money));
-        userRepository.save(user);
+    public ServiceMessage<UserDto> getUserInfo(String userApiKey) {
+        try {
+            User user = userRepository.findUserByKey(userApiKey);
+            if (user == null) {
+                throw new InternalErrorException("Данного юзера не существует");
+            }
+            return new ServiceMessage<>(InternalStatus.OK.getStatusCode(), InternalStatus.OK.getStatusVal(), mainMapper.mapping(user, UserDto.class));
+        }
+        catch (Exception e) {
+            throw new InternalErrorException(e.getMessage());
+        }
     }
 
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
-    public void subBalanceForUser(User user, BigDecimal money) {
-        user.setBalance(user.getBalance().subtract(money));
-        userRepository.save(user);
+    public User subFromRealBalanceAndAddToFreeze(User user, BigDecimal sum) {
+        BigDecimal subBalance = user.getBalance().subtract(sum);
+        if (subBalance.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Баланс не может быть отрицательным");
+        }
+        user.setBalance(subBalance);
+        user.setFreezeBalance(user.getFreezeBalance().add(sum));
+        return userRepository.save(user);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public User subFromFreezeAndAddToRealBalance(User user, BigDecimal sum) {
+        BigDecimal subFreezeBalance = user.getFreezeBalance().subtract(sum);
+        if (subFreezeBalance.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Замороженный баланс не может быть отрицательным");
+        }
+        user.setFreezeBalance(user.getBalance());
+        user.setBalance(user.getBalance().add(sum));
+        return userRepository.save(user);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public User subFromFreeze(User user, BigDecimal sum) {
+        BigDecimal subFreezeBalance = user.getFreezeBalance().subtract(sum);
+        if (subFreezeBalance.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Замороженный баланс не может быть отрицательным");
+        }
+        user.setFreezeBalance(subFreezeBalance);
+        return userRepository.save(user);
     }
 }
