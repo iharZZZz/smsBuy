@@ -10,15 +10,14 @@ import smolka.smsapi.dto.receiver.ReceiverActivationStatusDto;
 import smolka.smsapi.enums.*;
 import smolka.smsapi.exception.InternalErrorException;
 import smolka.smsapi.mapper.MainMapper;
-import smolka.smsapi.model.Activation;
-import smolka.smsapi.model.ActivationTarget;
-import smolka.smsapi.model.Country;
-import smolka.smsapi.model.User;
-import smolka.smsapi.repository.ActivationRepository;
+import smolka.smsapi.model.*;
+import smolka.smsapi.repository.ActivationHistoryRepository;
 import smolka.smsapi.repository.ActivationTargetRepository;
 import smolka.smsapi.repository.CountryRepository;
+import smolka.smsapi.repository.CurrentActivationRepository;
 import smolka.smsapi.service.activation.ActivationService;
 import smolka.smsapi.service.api_key.UserService;
+import smolka.smsapi.service.receiver.ReceiversAdapter;
 import smolka.smsapi.service.receiver.RestReceiver;
 
 import java.math.BigDecimal;
@@ -35,7 +34,9 @@ public class ActivationServiceImpl implements ActivationService {
     @Value("${sms.api.minutes_for_activation:20}")
     private Integer minutesForActivation;
     @Autowired
-    private ActivationRepository activationRepository;
+    private CurrentActivationRepository currentActivationRepository;
+    @Autowired
+    private ActivationHistoryRepository activationHistoryRepository;
     @Autowired
     private ActivationTargetRepository activationTargetRepository;
     @Autowired
@@ -43,9 +44,10 @@ public class ActivationServiceImpl implements ActivationService {
     @Autowired
     private MainMapper mainMapper;
     @Autowired
-    private UserService userService;
+    private ReceiversAdapter receiversAdapter;
     @Autowired
-    private RestReceiver smsHubReceiver;
+    private UserService userService;
+
 
     @Override
     @Transactional
@@ -59,23 +61,21 @@ public class ActivationServiceImpl implements ActivationService {
         }
         ActivationTarget service = activationTargetRepository.findByServiceCode(serviceCode);
         Country country = countryRepository.findByCountryCode(countryCode);
-        CostMapDto costMap = mainMapper.mapToInternalCostMap(smsHubReceiver.getCostMap());
-        if (!costMap.isExists(service.getServiceCode(), cost)) {
-            throw new InternalErrorException("No numbers", ErrorDictionary.NO_NUMBER);
-        }
-        ReceiverActivationInfoDto receiverActivationInfo = smsHubReceiver.orderActivation(country, service);
-        ActivationInfoDto activationInfo = this.createActivation(receiverActivationInfo, user, country, service, cost);
+        ReceiverActivationInfoDto receiverActivationInfo = receiversAdapter.orderAttempt(country, service, cost);
+        CurrentActivation newActivation = mainMapper.createNewCurrentActivation(receiverActivationInfo, user, country, service, cost, minutesForActivation);
+        currentActivationRepository.save(newActivation);
+        ActivationInfoDto activationInfo = mainMapper.mapActivationInfoFromActivation(newActivation);
         userService.subFromRealBalanceAndAddToFreeze(user, cost);
         return new ServiceMessage<>(InternalStatus.OK.getStatusCode(), InternalStatus.OK.getStatusVal(), activationInfo);
     }
 
     @Override
-    public ServiceMessage<ActivationStatusDto> getActivationForUser(String apiKey, Long id) {
+    public ServiceMessage<ActivationStatusDto> getCurrentActivationForUser(String apiKey, Long id) {
         User user = userService.findUserKey(apiKey);
         if (user == null) {
             throw new InternalErrorException("Api key not exists", ErrorDictionary.WRONG_KEY);
         }
-        Activation activation = activationRepository.findActivationByIdAndUser(id, user);
+        CurrentActivation activation = currentActivationRepository.findCurrentActivationByIdAndUser(id, user);
         if (activation == null) {
             throw new InternalErrorException("This activation not exist", ErrorDictionary.NO_ACTIVATION);
         }
@@ -89,7 +89,7 @@ public class ActivationServiceImpl implements ActivationService {
         if (user == null) {
             throw new InternalErrorException("Api key not exists", ErrorDictionary.WRONG_KEY);
         }
-        List<Activation> activations = activationRepository.findAllCurrentActivationsByUser(user);
+        List<CurrentActivation> activations = currentActivationRepository.findAllCurrentActivationsByUser(user);
         List<ActivationStatusDto> activationStatusList = activations.stream().map(a -> mainMapper.mapActivationStatusFromActivation(a)).collect(Collectors.toList()); // TODO когда вынесу все остальное в маппер поправить и здесь
         ActivationsStatusDto activationsStatusDto = new ActivationsStatusDto(activationStatusList);
         return new ServiceMessage<>(InternalStatus.OK.getStatusCode(), InternalStatus.OK.getStatusVal(), activationsStatusDto);
@@ -97,56 +97,62 @@ public class ActivationServiceImpl implements ActivationService {
 
     @Override
     @Transactional
-    public void setMessageForActivation(Activation activation, String message) {
+    public void setMessageForCurrentActivation(CurrentActivation activation, String message) {
         activation.setMessage(message);
         activation.setStatus(ActivationStatus.SMS_RECEIVED.getCode());
-        activationRepository.save(activation);
+        currentActivationRepository.save(activation);
     }
 
     @Override
-    public List<Activation> findAllInternalActiveActivations() {
-        return activationRepository.findAllActivationsByStatus(ActivationStatus.ACTIVE.getCode());
+    public List<CurrentActivation> findAllCurrentActivationsWithoutReceivedMessage() {
+        return currentActivationRepository.findAllCurrentActivationsByStatus(ActivationStatus.ACTIVE.getCode());
     }
 
     @Override
     @Transactional
-    public void closeActivationsForUser(User user, List<Activation> activationsForClose) {
+    public void closeCurrentActivationsForUser(User user, List<CurrentActivation> activationsForClose) {
         if (activationsForClose.isEmpty()) {
             return;
         }
-        for (Activation activation : activationsForClose) {
-            activation.setFinishDate(LocalDateTime.now());
-            activation.setStatus(ActivationStatus.CLOSED.getCode());
-        }
-        activationRepository.saveAll(activationsForClose);
+        List<ActivationHistory> activationHistories = activationsForClose.stream().map(curr -> {
+            ActivationHistory activationHistory = mainMapper.mapActivationHistoryFromCurrentActivation(curr);
+            activationHistory.setStatus(ActivationStatus.CLOSED.getCode());
+            activationHistory.setFinishDate(LocalDateTime.now());
+            return activationHistory;
+        }).collect(Collectors.toList());
+        activationHistoryRepository.saveAll(activationHistories);
+        currentActivationRepository.deleteAll(activationsForClose);
         BigDecimal sum = activationsForClose.stream()
-                .map(Activation::getCost)
+                .map(CurrentActivation::getCost)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         userService.subFromFreezeAndAddToRealBalance(user, sum);
     }
 
     @Override
     @Transactional
-    public void succeedActivationsForUser(User user, List<Activation> activationsForSucceed) {
+    public void succeedCurrentActivationsForUser(User user, List<CurrentActivation> activationsForSucceed) {
         if (activationsForSucceed.isEmpty()) {
             return;
         }
-        for (Activation activation : activationsForSucceed) {
-            activation.setFinishDate(LocalDateTime.now());
-            activation.setStatus(ActivationStatus.SUCCEED.getCode());
-        }
-        activationRepository.saveAll(activationsForSucceed);
+        List<ActivationHistory> activationHistories = activationsForSucceed.stream().map(curr -> {
+            ActivationHistory activationHistory = mainMapper.mapActivationHistoryFromCurrentActivation(curr);
+            activationHistory.setStatus(ActivationStatus.SUCCEED.getCode());
+            activationHistory.setFinishDate(LocalDateTime.now());
+            return activationHistory;
+        }).collect(Collectors.toList());
+        activationHistoryRepository.saveAll(activationHistories);
+        currentActivationRepository.deleteAll(activationsForSucceed);
         BigDecimal sum = activationsForSucceed.stream()
-                .map(Activation::getCost)
+                .map(CurrentActivation::getCost)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         userService.subFromFreeze(user, sum);
     }
 
     @Override
-    public Map<User, List<Activation>> findAllExpiredActivationsForUsers() {
-        List<Activation> expiredActivations = activationRepository.findAllActivationsByPlannedFinishDateLessThanEqual(LocalDateTime.now());
-        Map<User, List<Activation>> resultMap = new HashMap<>();
-        for (Activation activation : expiredActivations) {
+    public Map<User, List<CurrentActivation>> findAllCurrentExpiredActivationsForUsers() {
+        List<CurrentActivation> expiredActivations = currentActivationRepository.findAllCurrentActivationsByPlannedFinishDateLessThanEqual(LocalDateTime.now());
+        Map<User, List<CurrentActivation>> resultMap = new HashMap<>();
+        for (CurrentActivation activation : expiredActivations) {
             User userForActivation = activation.getUser();
             resultMap.computeIfAbsent(userForActivation, k -> new ArrayList<>());
             resultMap.get(userForActivation).add(activation);
@@ -154,40 +160,5 @@ public class ActivationServiceImpl implements ActivationService {
         return resultMap;
     }
 
-    @Override
-    public CommonReceiversActivationInfoMap getReceiversCurrentActivations() {
-        CommonReceiversActivationInfoMap receiverActivationInfoMap = new CommonReceiversActivationInfoMap();
-        List<ReceiverActivationStatusDto> receiverActivationStatusList = smsHubReceiver.getActivationsStatus();
-        for (ReceiverActivationStatusDto receiverActivation : receiverActivationStatusList) {
-            receiverActivationInfoMap.addActivationInfo(receiverActivation);
-        }
-        return receiverActivationInfoMap;
-    }
 
-
-
-    @Transactional
-    private ActivationInfoDto createActivation(ReceiverActivationInfoDto receiverActivationInfo,
-                                               User user,
-                                               Country country,
-                                               ActivationTarget service,
-                                               BigDecimal cost) {
-        LocalDateTime createDate = LocalDateTime.now();
-        Activation activation = Activation.builder() // TODO в маппер
-                .user(user)
-                .number(receiverActivationInfo.getNumber())
-                .message(null)
-                .country(country)
-                .service(service)
-                .source(receiverActivationInfo.getSource())
-                .createDate(LocalDateTime.now())
-                .finishDate(null)
-                .plannedFinishDate(createDate.plusMinutes(minutesForActivation))
-                .sourceId(receiverActivationInfo.getId())
-                .status(ActivationStatus.ACTIVE.getCode())
-                .cost(cost)
-                .build();
-        activation = activationRepository.save(activation);
-        return mainMapper.mapActivationInfoFromActivation(activation);
-    }
 }

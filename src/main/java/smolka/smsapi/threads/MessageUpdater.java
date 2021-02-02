@@ -7,9 +7,10 @@ import org.springframework.stereotype.Service;
 import smolka.smsapi.dto.CommonReceiversActivationInfoMap;
 import smolka.smsapi.dto.receiver.ReceiverActivationStatusDto;
 import smolka.smsapi.enums.ActivationStatus;
-import smolka.smsapi.model.Activation;
+import smolka.smsapi.model.CurrentActivation;
 import smolka.smsapi.model.User;
 import smolka.smsapi.service.activation.ActivationService;
+import smolka.smsapi.service.receiver.ReceiversAdapter;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
@@ -25,6 +26,9 @@ public class MessageUpdater extends Thread {
 
     @Autowired
     private ActivationService activationService;
+
+    @Autowired
+    private ReceiversAdapter receiversAdapter;
 
     @PostConstruct
     public void initialize() {
@@ -48,26 +52,26 @@ public class MessageUpdater extends Thread {
     }
 
     private void setMessageForActivationsStep() {
-        List<Activation> currentActivations = activationService.findAllInternalActiveActivations();
-        CommonReceiversActivationInfoMap receiverActivationInfoMap = activationService.getReceiversCurrentActivations();
-        for (Activation activation : currentActivations) {
+        List<CurrentActivation> currentActivations = activationService.findAllCurrentActivationsWithoutReceivedMessage();
+        CommonReceiversActivationInfoMap receiverActivationInfoMap = receiversAdapter.getReceiversCurrentActivations();
+        for (CurrentActivation activation : currentActivations) {
             ReceiverActivationStatusDto receiverActivationStatus = receiverActivationInfoMap.getActivation(activation.getSource(), activation.getSourceId());
             if (receiverActivationStatus != null) {
                 if (receiverActivationStatus.getActivationStatus().equals(ActivationStatus.SMS_RECEIVED)
                         && receiverActivationStatus.getMessage() != null
                         && !receiverActivationStatus.getMessage().equals(activation.getMessage())) {
-                    activationService.setMessageForActivation(activation, receiverActivationStatus.getMessage());
+                    activationService.setMessageForCurrentActivation(activation, receiverActivationStatus.getMessage());
                 }
             }
         }
     }
 
     private void closeExpiredActivationsStep() {
-        Map<User, List<Activation>> expiredActivationsPerUser = activationService.findAllExpiredActivationsForUsers();
+        Map<User, List<CurrentActivation>> expiredActivationsPerUser = activationService.findAllCurrentExpiredActivationsForUsers();
         for (User user : expiredActivationsPerUser.keySet()) {
-            List<Activation> allExpiredActivations = expiredActivationsPerUser.get(user);
-            List<Activation> activationsForClose = new ArrayList<>();
-            List<Activation> activationsForSucceed = new ArrayList<>();
+            List<CurrentActivation> allExpiredActivations = expiredActivationsPerUser.get(user);
+            List<CurrentActivation> activationsForClose = new ArrayList<>();
+            List<CurrentActivation> activationsForSucceed = new ArrayList<>();
             allExpiredActivations.forEach(a -> {
                 if (a.getStatus().equals(ActivationStatus.SMS_RECEIVED.getCode())) {
                     activationsForSucceed.add(a);
@@ -75,8 +79,8 @@ public class MessageUpdater extends Thread {
                     activationsForClose.add(a);
                 }
             });
-            activationService.succeedActivationsForUser(user, activationsForSucceed);
-            activationService.closeActivationsForUser(user, activationsForClose);
+            activationService.succeedCurrentActivationsForUser(user, activationsForSucceed);
+            activationService.closeCurrentActivationsForUser(user, activationsForClose);
         }
     }
 

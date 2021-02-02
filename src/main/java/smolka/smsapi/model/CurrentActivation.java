@@ -11,9 +11,9 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "ACTIVATION")
+@Table(name = "CURRENT_ACTIVATION")
 @Data
-@NamedEntityGraph(name = "activation.all", attributeNodes = {
+@NamedEntityGraph(name = "currentActivation.all", attributeNodes = {
         @NamedAttributeNode("user"),
         @NamedAttributeNode(value = "country"),
         @NamedAttributeNode(value = "service")
@@ -21,7 +21,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
-public class Activation {
+public class CurrentActivation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -58,9 +58,6 @@ public class Activation {
 
     @Column(name = "START_DATE")
     private LocalDateTime createDate;
-
-    @Column(name = "CLOSE_DATE")
-    private LocalDateTime finishDate;
 
     @Column(name = "PLANNED_CLOSE_DATE")
     private LocalDateTime plannedFinishDate;

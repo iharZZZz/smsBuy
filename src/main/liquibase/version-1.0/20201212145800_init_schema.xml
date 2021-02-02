@@ -54,15 +54,34 @@
             </column>
         </createTable>
 
-        <createTable tableName="ACTIVATION">
+        <createTable tableName="CURRENT_ACTIVATION">
             <column name="ID" type="BIGINT" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
 
             <column name="USER_ID" type="BIGINT"/>
             <column name="START_DATE" type="DATETIME"/>
-            <column name="CLOSE_DATE" type="DATETIME"/>
             <column name="PLANNED_CLOSE_DATE" type="DATETIME"/>
+            <column name="STATUS" type="INTEGER"/>
+            <column name="NUMBER" type="VARCHAR(100)"/>
+            <column name="MESSAGE" type="VARCHAR(1000)"/>
+
+            <column name="COUNTRY_ID" type="INT"/>
+            <column name="SERVICE_ID" type="INT"/>
+
+            <column name="SOURCE_NAME" type="VARCHAR(20)"/>
+            <column name="SOURCE_ID" type="BIGINT"/>
+            <column name="COST" type="DECIMAL(23,5)"/>
+        </createTable>
+
+        <createTable tableName="ACTIVATION_HISTORY">
+            <column name="ID" type="BIGINT">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="USER_ID" type="BIGINT"/>
+            <column name="START_DATE" type="DATETIME"/>
+            <column name="CLOSE_DATE" type="DATETIME"/>
             <column name="STATUS" type="INTEGER"/>
             <column name="NUMBER" type="VARCHAR(100)"/>
             <column name="MESSAGE" type="VARCHAR(1000)"/>
@@ -78,7 +97,7 @@
         <addUniqueConstraint  clustered="false"
                               columnNames="SOURCE_NAME, SOURCE_ID"
                               constraintName="activ_unique_const"
-                              tableName="ACTIVATION"
+                              tableName="CURRENT_ACTIVATION"
                               validate="true"/>
     </changeSet>
 </databaseChangeLog>

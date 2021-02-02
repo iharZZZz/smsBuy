@@ -24,8 +24,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-@Service
 @Slf4j
+@Service(value = "smsHubReceiver")
 public class SmsHubReceiver implements RestReceiver {
 
     @Autowired

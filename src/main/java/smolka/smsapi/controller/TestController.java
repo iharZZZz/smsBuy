@@ -29,12 +29,12 @@ public class TestController {
         return userService.getUserInfo(apiKey);
     }
 
-    @GetMapping("/activationStatus")
+    @GetMapping("/currentActivationStatus")
     public ServiceMessage<ActivationStatusDto> getActivationStatus(@RequestParam("apiKey") String apiKey, @RequestParam("id") Long id) {
-        return activationService.getActivationForUser(apiKey, id);
+        return activationService.getCurrentActivationForUser(apiKey, id);
     }
 
-    @GetMapping("/allActivations")
+    @GetMapping("/allCurrentActivations")
     public ServiceMessage<ActivationsStatusDto> getAllCurrentActivations(@RequestParam("apiKey") String apiKey) {
         return activationService.getCurrentActivationsForUser(apiKey);
     }

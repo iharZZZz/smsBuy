@@ -6,14 +6,15 @@ import org.springframework.stereotype.Service;
 import smolka.smsapi.dto.ActivationInfoDto;
 import smolka.smsapi.dto.ActivationStatusDto;
 import smolka.smsapi.dto.CostMapDto;
-import smolka.smsapi.dto.receiver.ReceiverActivationStatusDto;
+import smolka.smsapi.dto.receiver.ReceiverActivationInfoDto;
 import smolka.smsapi.dto.receiver.ReceiverCostMapDto;
-import smolka.smsapi.model.Activation;
-import smolka.smsapi.model.ActivationTarget;
+import smolka.smsapi.enums.ActivationStatus;
+import smolka.smsapi.model.*;
 import smolka.smsapi.repository.ActivationTargetRepository;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -61,17 +62,55 @@ public class MainMapper {
         return internalCostMap;
     }
 
-    public ActivationStatusDto mapActivationStatusFromActivation(Activation activation) {
+    public ActivationStatusDto mapActivationStatusFromActivation(CurrentActivation activation) {
         ActivationStatusDto activationStatus = mapping(activation, ActivationStatusDto.class);
         activationStatus.setCountryCode(activation.getCountry().getCountryCode());
         activationStatus.setServiceCode(activation.getService().getServiceCode());
         return activationStatus;
     }
 
-    public ActivationInfoDto mapActivationInfoFromActivation(Activation activation) {
+    public ActivationInfoDto mapActivationInfoFromActivation(CurrentActivation activation) {
         ActivationInfoDto activationInfo = mapping(activation, ActivationInfoDto.class);
         activationInfo.setCountryCode(activation.getCountry().getCountryCode());
         activationInfo.setServiceCode(activation.getService().getServiceCode());
         return activationInfo;
+    }
+
+    public ActivationHistory mapActivationHistoryFromCurrentActivation(CurrentActivation currActivation) {
+        return ActivationHistory.builder()
+                .id(currActivation.getId())
+                .user(currActivation.getUser())
+                .number(currActivation.getNumber())
+                .message(currActivation.getMessage())
+                .country(currActivation.getCountry())
+                .service(currActivation.getService())
+                .source(currActivation.getSource())
+                .createDate(currActivation.getCreateDate())
+                .sourceId(currActivation.getSourceId())
+                .status(currActivation.getStatus())
+                .cost(currActivation.getCost())
+                .build();
+    }
+
+    public CurrentActivation createNewCurrentActivation(ReceiverActivationInfoDto receiverActivationInfo,
+                                                        User user,
+                                                        Country country,
+                                                        ActivationTarget service,
+                                                        BigDecimal cost,
+                                                        Integer minutesForActivation) {
+        LocalDateTime createDate = LocalDateTime.now();
+        return CurrentActivation.builder()
+                .user(user)
+                .number(receiverActivationInfo.getNumber())
+                .message(null)
+                .country(country)
+                .service(service)
+                .source(receiverActivationInfo.getSource())
+                .createDate(LocalDateTime.now())
+                .plannedFinishDate(createDate.plusMinutes(minutesForActivation))
+                .sourceId(receiverActivationInfo.getId())
+                .status(ActivationStatus.ACTIVE.getCode())
+                .cost(cost)
+                .build();
     }
 }
