@@ -6,14 +6,13 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum ErrorDictionary {
-    WRONG_KEY(401, "Неверный API ключ"),
-    WRONG_SERVICE(400, "Неизвестный сервис"),
-    NO_BALANCE(403, "Не хватает денег на балансе"),
-    NO_NUMBER(400, "В данный момент нет доступных номеров"),
-    NO_ACTIVATION(400, "Такой активации нет"),
-    UNKNOWN(500, "Неизвестная ошибка сервиса");
+    WRONG_KEY( "Неверный API ключ"),
+    WRONG_SERVICE("Неизвестный сервис"),
+    NO_BALANCE( "Не хватает денег на балансе"),
+    NO_NUMBER( "В данный момент нет доступных номеров"),
+    NO_ACTIVATION( "Такой активации нет"),
+    UNKNOWN("Неизвестная ошибка сервиса");
 
 
-    private final Integer errorCode;
     private final String errorMessage;
 }

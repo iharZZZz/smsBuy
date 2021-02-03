@@ -7,8 +7,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import smolka.smsapi.dto.ServiceMessage;
 import smolka.smsapi.dto.UserDto;
-import smolka.smsapi.dto.input.UserKeyDto;
-import smolka.smsapi.enums.InternalStatus;
+import smolka.smsapi.enums.SmsConstants;
 import smolka.smsapi.exception.InternalErrorException;
 import smolka.smsapi.mapper.MainMapper;
 import smolka.smsapi.model.User;
@@ -26,35 +25,6 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private MainMapper mainMapper;
-
-    @Override
-    @Transactional
-    public UserKeyDto create(UserKeyDto userKey) {
-        try {
-            User userEntity = mainMapper.mapping(userKey, User.class);
-            userEntity.setFreezeBalance(BigDecimal.ZERO);
-            userEntity.setBalance(BigDecimal.ZERO);
-            return mainMapper.mapping(userRepository.save(userEntity), UserKeyDto.class);
-        }
-        catch (Exception e) {
-            throw new InternalErrorException(e.getMessage());
-        }
-    }
-
-    @Override
-    @Transactional
-    public UserKeyDto update(UserKeyDto userKey) {
-        try {
-            User existingEntity = userRepository.findUserByUserId(userKey.getUserId());
-            if (existingEntity == null) {
-                throw new InternalErrorException("This entity doesnt exists!");
-            }
-            return mainMapper.mapping(userRepository.save(existingEntity), UserKeyDto.class);
-        }
-        catch (Exception e) {
-            throw new InternalErrorException(e.getMessage());
-        }
-    }
 
     @Override
     @Transactional
@@ -85,7 +55,7 @@ public class UserServiceImpl implements UserService {
             if (user == null) {
                 throw new InternalErrorException("Данного юзера не существует");
             }
-            return new ServiceMessage<>(InternalStatus.OK.getStatusCode(), InternalStatus.OK.getStatusVal(), mainMapper.mapping(user, UserDto.class));
+            return new ServiceMessage<>(SmsConstants.SUCCESS_STATUS.getValue(), mainMapper.mapping(user, UserDto.class));
         }
         catch (Exception e) {
             throw new InternalErrorException(e.getMessage());

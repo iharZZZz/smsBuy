@@ -24,6 +24,11 @@ public class TestController {
         return activationService.orderActivation(orderDto.getApiKey(), orderDto.getCost(), orderDto.getService(), orderDto.getCountry());
     }
 
+    @GetMapping("/cost")
+    public CostMapDto getCostMap(@RequestParam("apiKey") String apiKey) {
+        return activationService.getCostsForActivations(apiKey);
+    }
+
     @GetMapping("/user")
     public ServiceMessage<UserDto> getUserInfo(@RequestParam("apiKey") String apiKey) {
         return userService.getUserInfo(apiKey);

@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ServiceMessage <T> {
-    private Integer statusCode;
     private String status;
     private T message;
 }

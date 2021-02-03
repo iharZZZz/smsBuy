@@ -2,6 +2,7 @@ package smolka.smsapi.mapper;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import smolka.smsapi.dto.ActivationInfoDto;
 import smolka.smsapi.dto.ActivationStatusDto;
@@ -24,12 +25,12 @@ import java.util.stream.Collectors;
 @Service
 public class MainMapper {
 
+    @Value(value = "${sms.api.bigdecimal_scaling}")
+    private Integer scale;
     @Autowired
     private ModelMapper modelMapper;
     @Autowired
     private ActivationTargetRepository activationTargetRepository;
-
-    private static final Integer SCALE = 2;
 
     public <E, D> D mapping(E object, Class<D> clazz) {
         if (object == null) {
@@ -54,7 +55,7 @@ public class MainMapper {
             Map<BigDecimal, Integer> costs = costMap.getCostMap().get(service);
             for (BigDecimal cost : costs.keySet()) {
                 BigDecimal newCost = new BigDecimal(cost.toString());
-                newCost = newCost.setScale(SCALE, RoundingMode.CEILING);
+                newCost = newCost.setScale(scale, RoundingMode.CEILING);
                 String internalServiceCode = service.getServiceCode();
                 internalCostMap.addCostToMapWithAdd(internalServiceCode, newCost, costs.get(cost));
             }

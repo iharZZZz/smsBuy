@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import smolka.smsapi.dto.*;
 import smolka.smsapi.dto.receiver.ReceiverActivationInfoDto;
-import smolka.smsapi.dto.receiver.ReceiverActivationStatusDto;
 import smolka.smsapi.enums.*;
 import smolka.smsapi.exception.InternalErrorException;
 import smolka.smsapi.mapper.MainMapper;
@@ -18,7 +17,6 @@ import smolka.smsapi.repository.CurrentActivationRepository;
 import smolka.smsapi.service.activation.ActivationService;
 import smolka.smsapi.service.api_key.UserService;
 import smolka.smsapi.service.receiver.ReceiversAdapter;
-import smolka.smsapi.service.receiver.RestReceiver;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -66,7 +64,7 @@ public class ActivationServiceImpl implements ActivationService {
         currentActivationRepository.save(newActivation);
         ActivationInfoDto activationInfo = mainMapper.mapActivationInfoFromActivation(newActivation);
         userService.subFromRealBalanceAndAddToFreeze(user, cost);
-        return new ServiceMessage<>(InternalStatus.OK.getStatusCode(), InternalStatus.OK.getStatusVal(), activationInfo);
+        return new ServiceMessage<>(SmsConstants.SUCCESS_STATUS.getValue(), activationInfo);
     }
 
     @Override
@@ -80,7 +78,7 @@ public class ActivationServiceImpl implements ActivationService {
             throw new InternalErrorException("This activation not exist", ErrorDictionary.NO_ACTIVATION);
         }
         ActivationStatusDto activationStatus = mainMapper.mapActivationStatusFromActivation(activation);
-        return new ServiceMessage<>(InternalStatus.OK.getStatusCode(), InternalStatus.OK.getStatusVal(), activationStatus);
+        return new ServiceMessage<>(SmsConstants.SUCCESS_STATUS.getValue(), activationStatus);
     }
 
     @Override
@@ -92,7 +90,16 @@ public class ActivationServiceImpl implements ActivationService {
         List<CurrentActivation> activations = currentActivationRepository.findAllCurrentActivationsByUser(user);
         List<ActivationStatusDto> activationStatusList = activations.stream().map(a -> mainMapper.mapActivationStatusFromActivation(a)).collect(Collectors.toList()); // TODO когда вынесу все остальное в маппер поправить и здесь
         ActivationsStatusDto activationsStatusDto = new ActivationsStatusDto(activationStatusList);
-        return new ServiceMessage<>(InternalStatus.OK.getStatusCode(), InternalStatus.OK.getStatusVal(), activationsStatusDto);
+        return new ServiceMessage<>(SmsConstants.SUCCESS_STATUS.getValue(), activationsStatusDto);
+    }
+
+    @Override
+    public CostMapDto getCostsForActivations(String apiKey) {
+        User user = userService.findUserKey(apiKey);
+        if (user == null) {
+            throw new InternalErrorException("Api key not exists", ErrorDictionary.WRONG_KEY);
+        }
+        return receiversAdapter.getCostMap();
     }
 
     @Override
@@ -159,6 +166,4 @@ public class ActivationServiceImpl implements ActivationService {
         }
         return resultMap;
     }
-
-
 }

@@ -94,6 +94,15 @@
             <column name="COST" type="DECIMAL(23,5)"/>
         </createTable>
 
+        <createTable tableName="PARAMS_DICT">
+            <column name="PARAM_NAME" type="VARCHAR(50)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="PARAM_VALUE" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
         <addUniqueConstraint  clustered="false"
                               columnNames="SOURCE_NAME, SOURCE_ID"
                               constraintName="activ_unique_const"

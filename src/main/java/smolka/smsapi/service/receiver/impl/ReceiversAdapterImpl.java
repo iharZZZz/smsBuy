@@ -11,6 +11,7 @@ import smolka.smsapi.exception.InternalErrorException;
 import smolka.smsapi.mapper.MainMapper;
 import smolka.smsapi.model.ActivationTarget;
 import smolka.smsapi.model.Country;
+import smolka.smsapi.service.markupper.MarkUpperService;
 import smolka.smsapi.service.receiver.ReceiversAdapter;
 import smolka.smsapi.service.receiver.RestReceiver;
 
@@ -24,10 +25,17 @@ public class ReceiversAdapterImpl implements ReceiversAdapter {
     private RestReceiver smsHubReceiver;
     @Autowired
     private MainMapper mainMapper;
+    @Autowired
+    private MarkUpperService markUpperService;
+
+    @Override
+    public CostMapDto getCostMap() {
+        return markUpperService.markUp(mainMapper.mapToInternalCostMap(smsHubReceiver.getCostMap()));
+    }
 
     @Override
     public ReceiverActivationInfoDto orderAttempt(Country country, ActivationTarget service, BigDecimal cost) {
-        CostMapDto costMap = mainMapper.mapToInternalCostMap(smsHubReceiver.getCostMap());
+        CostMapDto costMap = getCostMap();
         if (!costMap.isExists(service.getServiceCode(), cost)) {
             throw new InternalErrorException("No numbers", ErrorDictionary.NO_NUMBER);
         }
