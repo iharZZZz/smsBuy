@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
-public interface ActivationService {
+public interface CurrentActivationService {
     ServiceMessage<ActivationInfoDto> orderActivation(String apiKey, BigDecimal cost, String serviceCode, String countryCode);
     ServiceMessage<ActivationStatusDto> getCurrentActivationForUser(String apiKey, Long id);
     ServiceMessage<ActivationsStatusDto> getCurrentActivationsForUser(String apiKey);

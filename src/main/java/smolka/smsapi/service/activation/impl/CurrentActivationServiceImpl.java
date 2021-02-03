@@ -14,7 +14,8 @@ import smolka.smsapi.repository.ActivationHistoryRepository;
 import smolka.smsapi.repository.ActivationTargetRepository;
 import smolka.smsapi.repository.CountryRepository;
 import smolka.smsapi.repository.CurrentActivationRepository;
-import smolka.smsapi.service.activation.ActivationService;
+import smolka.smsapi.service.activation.ActivationHistoryService;
+import smolka.smsapi.service.activation.CurrentActivationService;
 import smolka.smsapi.service.api_key.UserService;
 import smolka.smsapi.service.receiver.ReceiversAdapter;
 
@@ -27,14 +28,14 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
-public class ActivationServiceImpl implements ActivationService {
+public class CurrentActivationServiceImpl implements CurrentActivationService {
 
     @Value("${sms.api.minutes_for_activation:20}")
     private Integer minutesForActivation;
     @Autowired
     private CurrentActivationRepository currentActivationRepository;
     @Autowired
-    private ActivationHistoryRepository activationHistoryRepository;
+    private ActivationHistoryService activationHistoryService;
     @Autowired
     private ActivationTargetRepository activationTargetRepository;
     @Autowired
@@ -121,13 +122,7 @@ public class ActivationServiceImpl implements ActivationService {
         if (activationsForClose.isEmpty()) {
             return;
         }
-        List<ActivationHistory> activationHistories = activationsForClose.stream().map(curr -> {
-            ActivationHistory activationHistory = mainMapper.mapActivationHistoryFromCurrentActivation(curr);
-            activationHistory.setStatus(ActivationStatus.CLOSED.getCode());
-            activationHistory.setFinishDate(LocalDateTime.now());
-            return activationHistory;
-        }).collect(Collectors.toList());
-        activationHistoryRepository.saveAll(activationHistories);
+        activationHistoryService.saveAllCurrentActivationsToHistoryWithStatus(activationsForClose, ActivationStatus.CLOSED);
         currentActivationRepository.deleteAll(activationsForClose);
         BigDecimal sum = activationsForClose.stream()
                 .map(CurrentActivation::getCost)
@@ -141,13 +136,7 @@ public class ActivationServiceImpl implements ActivationService {
         if (activationsForSucceed.isEmpty()) {
             return;
         }
-        List<ActivationHistory> activationHistories = activationsForSucceed.stream().map(curr -> {
-            ActivationHistory activationHistory = mainMapper.mapActivationHistoryFromCurrentActivation(curr);
-            activationHistory.setStatus(ActivationStatus.SUCCEED.getCode());
-            activationHistory.setFinishDate(LocalDateTime.now());
-            return activationHistory;
-        }).collect(Collectors.toList());
-        activationHistoryRepository.saveAll(activationHistories);
+        activationHistoryService.saveAllCurrentActivationsToHistoryWithStatus(activationsForSucceed, ActivationStatus.SUCCEED);
         currentActivationRepository.deleteAll(activationsForSucceed);
         BigDecimal sum = activationsForSucceed.stream()
                 .map(CurrentActivation::getCost)
