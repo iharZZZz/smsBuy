@@ -35,11 +35,7 @@ public class ReceiversAdapterImpl implements ReceiversAdapter {
 
     @Override
     public ReceiverActivationInfoDto orderAttempt(Country country, ActivationTarget service, BigDecimal cost) {
-        CostMapDto costMap = mainMapper.mapToInternalCostMap(smsHubReceiver.getCostMap());
-        if (!costMap.isExists(service.getServiceCode(), cost)) {
-            throw new InternalErrorException("No numbers", ErrorDictionary.NO_NUMBER);
-        }
-        return smsHubReceiver.orderActivation(country, service);
+        return attemptToSmsHub(country, service, cost);
     }
 
     @Override
@@ -50,5 +46,13 @@ public class ReceiversAdapterImpl implements ReceiversAdapter {
             receiverActivationInfoMap.addActivationInfo(receiverActivation);
         }
         return receiverActivationInfoMap;
+    }
+
+    private ReceiverActivationInfoDto attemptToSmsHub(Country country, ActivationTarget service, BigDecimal cost) {
+        CostMapDto costMap = markUpperService.markUp(mainMapper.mapToInternalCostMap(smsHubReceiver.getCostMap()));
+        if (!costMap.isExists(service.getServiceCode(), cost)) {
+            throw new InternalErrorException("No numbers", ErrorDictionary.NO_NUMBER);
+        }
+        return smsHubReceiver.orderActivation(country, service);
     }
 }
