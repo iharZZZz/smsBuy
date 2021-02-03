@@ -45,6 +45,9 @@ public class MarkUpperServiceImpl implements MarkUpperService {
         if (percentageForMarkUpper != null) {
             percentage = Integer.parseInt(percentageForMarkUpper.getValue());
         }
+        if (percentage == 0) {
+            return costMapDto;
+        }
         for (String srv : costMapDto.getCostMap().keySet()) {
             Map<BigDecimal, Integer> costs = costMapDto.getCostMap().get(srv);
             for (BigDecimal val : costs.keySet()) {
