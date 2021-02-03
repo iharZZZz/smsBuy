@@ -35,7 +35,7 @@ public class ReceiversAdapterImpl implements ReceiversAdapter {
 
     @Override
     public ReceiverActivationInfoDto orderAttempt(Country country, ActivationTarget service, BigDecimal cost) {
-        CostMapDto costMap = getCostMap();
+        CostMapDto costMap = mainMapper.mapToInternalCostMap(smsHubReceiver.getCostMap());
         if (!costMap.isExists(service.getServiceCode(), cost)) {
             throw new InternalErrorException("No numbers", ErrorDictionary.NO_NUMBER);
         }
