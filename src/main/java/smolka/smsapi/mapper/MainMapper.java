@@ -6,8 +6,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import smolka.smsapi.dto.ActivationInfoDto;
 import smolka.smsapi.dto.ActivationStatusDto;
+import smolka.smsapi.dto.CommonReceiversActivationInfoMap;
 import smolka.smsapi.dto.CostMapDto;
 import smolka.smsapi.dto.receiver.ReceiverActivationInfoDto;
+import smolka.smsapi.dto.receiver.ReceiverActivationStatusDto;
 import smolka.smsapi.dto.receiver.ReceiverCostMapDto;
 import smolka.smsapi.enums.ActivationStatus;
 import smolka.smsapi.model.*;
@@ -113,5 +115,13 @@ public class MainMapper {
                 .status(ActivationStatus.ACTIVE.getCode())
                 .cost(cost)
                 .build();
+    }
+
+    public CommonReceiversActivationInfoMap getCommonReceiversActivationInfoMapFromReceiversActivationsList(List<ReceiverActivationStatusDto> receiverActivationStatusList) {
+        CommonReceiversActivationInfoMap receiverActivationInfoMap = new CommonReceiversActivationInfoMap();
+        for (ReceiverActivationStatusDto receiverActivation : receiverActivationStatusList) {
+            receiverActivationInfoMap.addActivationInfo(receiverActivation);
+        }
+        return receiverActivationInfoMap;
     }
 }

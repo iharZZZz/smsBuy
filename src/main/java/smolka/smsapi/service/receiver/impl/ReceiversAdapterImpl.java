@@ -29,8 +29,8 @@ public class ReceiversAdapterImpl implements ReceiversAdapter {
     private MarkUpperService markUpperService;
 
     @Override
-    public CostMapDto getCostMap() {
-        return markUpperService.markUp(mainMapper.mapToInternalCostMap(smsHubReceiver.getCostMap()));
+    public CostMapDto getCommonCostMap() {
+        return getCostMapFromSmsHub(); // пока что тут будет только получение инфы с СМС-хаба, т.к другие сервисы пока интегрировать рано
     }
 
     @Override
@@ -40,19 +40,19 @@ public class ReceiversAdapterImpl implements ReceiversAdapter {
 
     @Override
     public CommonReceiversActivationInfoMap getReceiversCurrentActivations() {
-        CommonReceiversActivationInfoMap receiverActivationInfoMap = new CommonReceiversActivationInfoMap();
         List<ReceiverActivationStatusDto> receiverActivationStatusList = smsHubReceiver.getActivationsStatus();
-        for (ReceiverActivationStatusDto receiverActivation : receiverActivationStatusList) {
-            receiverActivationInfoMap.addActivationInfo(receiverActivation);
-        }
-        return receiverActivationInfoMap;
+        return mainMapper.getCommonReceiversActivationInfoMapFromReceiversActivationsList(receiverActivationStatusList);
     }
 
     private ReceiverActivationInfoDto attemptToSmsHub(Country country, ActivationTarget service, BigDecimal cost) {
-        CostMapDto costMap = markUpperService.markUp(mainMapper.mapToInternalCostMap(smsHubReceiver.getCostMap()));
+        CostMapDto costMap = getCostMapFromSmsHub();
         if (!costMap.isExists(service.getServiceCode(), cost)) {
             throw new InternalErrorException("No numbers", ErrorDictionary.NO_NUMBER);
         }
         return smsHubReceiver.orderActivation(country, service);
+    }
+
+    private CostMapDto getCostMapFromSmsHub() {
+        return markUpperService.markUp(mainMapper.mapToInternalCostMap(smsHubReceiver.getCostMap()));
     }
 }

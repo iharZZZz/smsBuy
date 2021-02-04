@@ -9,6 +9,7 @@ import smolka.smsapi.model.InternalParameter;
 import smolka.smsapi.repository.ParametersRepository;
 import smolka.smsapi.service.markupper.MarkUpperService;
 
+import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Map;
@@ -24,6 +25,13 @@ public class MarkUpperServiceImpl implements MarkUpperService {
 
     @Autowired
     private ParametersRepository parametersRepository;
+    private Integer percentageCashedValue;
+
+    @PostConstruct
+    public void initialize() {
+        InternalParameter percentageForMarkUpper = parametersRepository.findByName(percentageForMarkUpperParameterName);
+        percentageCashedValue = percentageForMarkUpper == null ? null : Integer.parseInt(percentageForMarkUpper.getValue());
+    }
 
     @Override
     @Transactional
@@ -31,20 +39,18 @@ public class MarkUpperServiceImpl implements MarkUpperService {
         InternalParameter percentageForMarkUpper = parametersRepository.findByName(percentageForMarkUpperParameterName);
         if (percentageForMarkUpper == null) {
             percentageForMarkUpper = new InternalParameter(percentageForMarkUpperParameterName, defaultValue.toString());
+            percentageCashedValue = defaultValue;
         }
         if (percentage != null) {
             percentageForMarkUpper.setValue(percentage.toString());
+            percentageCashedValue = percentage;
         }
         parametersRepository.save(percentageForMarkUpper);
     }
 
     @Override
     public CostMapDto markUp(CostMapDto costMapDto) {
-        Integer percentage = defaultValue;
-        InternalParameter percentageForMarkUpper = parametersRepository.findByName(percentageForMarkUpperParameterName);
-        if (percentageForMarkUpper != null) {
-            percentage = Integer.parseInt(percentageForMarkUpper.getValue());
-        }
+        Integer percentage = percentageCashedValue == null ? defaultValue : percentageCashedValue;
         if (percentage == 0) {
             return costMapDto;
         }

@@ -10,7 +10,6 @@ import smolka.smsapi.enums.*;
 import smolka.smsapi.exception.InternalErrorException;
 import smolka.smsapi.mapper.MainMapper;
 import smolka.smsapi.model.*;
-import smolka.smsapi.repository.ActivationHistoryRepository;
 import smolka.smsapi.repository.ActivationTargetRepository;
 import smolka.smsapi.repository.CountryRepository;
 import smolka.smsapi.repository.CurrentActivationRepository;
@@ -100,7 +99,7 @@ public class CurrentActivationServiceImpl implements CurrentActivationService {
         if (user == null) {
             throw new InternalErrorException("Api key not exists", ErrorDictionary.WRONG_KEY);
         }
-        return receiversAdapter.getCostMap();
+        return receiversAdapter.getCommonCostMap();
     }
 
     @Override
