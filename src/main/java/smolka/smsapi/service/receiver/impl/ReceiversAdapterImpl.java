@@ -6,6 +6,7 @@ import smolka.smsapi.dto.CommonReceiversActivationInfoMap;
 import smolka.smsapi.dto.CostMapDto;
 import smolka.smsapi.dto.receiver.ReceiverActivationInfoDto;
 import smolka.smsapi.dto.receiver.ReceiverActivationStatusDto;
+import smolka.smsapi.dto.receiver.ReceiverCostMapDto;
 import smolka.smsapi.enums.ErrorDictionary;
 import smolka.smsapi.exception.InternalErrorException;
 import smolka.smsapi.mapper.MainMapper;
@@ -30,7 +31,7 @@ public class ReceiversAdapterImpl implements ReceiversAdapter {
 
     @Override
     public CostMapDto getCommonCostMap() {
-        return getCostMapFromSmsHub(); // пока что тут будет только получение инфы с СМС-хаба, т.к другие сервисы пока интегрировать рано
+        return markUpperService.markUp(mainMapper.mapToInternalCostMap(smsHubReceiver.getCostMap())); // пока что тут будет только получение инфы с СМС-хаба, т.к другие сервисы пока интегрировать рано
     }
 
     @Override
@@ -45,14 +46,14 @@ public class ReceiversAdapterImpl implements ReceiversAdapter {
     }
 
     private ReceiverActivationInfoDto attemptToSmsHub(Country country, ActivationTarget service, BigDecimal cost) {
-        CostMapDto costMap = getCostMapFromSmsHub();
-        if (!costMap.isExists(service.getServiceCode(), cost)) {
+        ReceiverCostMapDto costMap = getCostMapFromSmsHub();
+        if (!costMap.isExists(service, cost)) {
             throw new InternalErrorException("No numbers", ErrorDictionary.NO_NUMBER);
         }
         return smsHubReceiver.orderActivation(country, service);
     }
 
-    private CostMapDto getCostMapFromSmsHub() {
-        return markUpperService.markUp(mainMapper.mapToInternalCostMap(smsHubReceiver.getCostMap()));
+    private ReceiverCostMapDto getCostMapFromSmsHub() {
+        return smsHubReceiver.getCostMap();
     }
 }
