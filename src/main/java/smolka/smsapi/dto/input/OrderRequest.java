@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class OrderDto {
+public class OrderRequest {
     @NotNull
     private String apiKey;
     @NotNull

@@ -3,9 +3,7 @@ package smolka.smsapi.mapper;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import smolka.smsapi.dto.*;
 import smolka.smsapi.dto.input.CustomPageableRequest;
@@ -20,8 +18,6 @@ import smolka.smsapi.repository.ActivationTargetRepository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -104,7 +100,7 @@ public class MainMapper {
                 .build();
     }
 
-    public ActivationHistoryDto mapActivationHistoryDtoFromActivationHistoryList(List<ActivationHistory> activationHistory) {
+    public ActivationHistoryDto mapActivationHistoryDtoFromActivationHistoryListAndCount(List<ActivationHistory> activationHistory, Pageable pageable, Long count) {
         List<ActivationHistoryElementDto> activationHistoryElements = activationHistory.stream()
                 .map(a -> {
                     ActivationHistoryElementDto activationHistoryDto = mapping(a, ActivationHistoryElementDto.class);
@@ -113,8 +109,9 @@ public class MainMapper {
                     return activationHistoryDto;
                 })
                 .collect(Collectors.toList());
+        Page<ActivationHistoryElementDto> activationHistoryElementsDtoPage = new PageImpl<>(activationHistoryElements, pageable, count);
         return ActivationHistoryDto.builder()
-                .activationHistory(activationHistoryElements)
+                .activationHistory(activationHistoryElementsDtoPage)
                 .build();
     }
 

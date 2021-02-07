@@ -43,7 +43,7 @@ public class ActivationHistoryServiceImpl implements ActivationHistoryService {
         }
         Pageable pageableForActivationHistoryWithSortFinishDateAsc = mainMapper.mapPageableFromCustomPageRequest(getActivationHistoryRequest, SortDictionary.ACTIVATION_HISTORY_SORT_FINISH_DATE_DESC);
         Page<ActivationHistory> activationHistory = activationHistoryRepository.findAllByUser(pageableForActivationHistoryWithSortFinishDateAsc, user);
-        ActivationHistoryDto activationHistoryDto = mainMapper.mapActivationHistoryDtoFromActivationHistoryList(activationHistory.toList());
+        ActivationHistoryDto activationHistoryDto = mainMapper.mapActivationHistoryDtoFromActivationHistoryListAndCount(activationHistory.toList(), pageableForActivationHistoryWithSortFinishDateAsc, activationHistoryRepository.countByUser(user));
         return new ServiceMessage<>(SmsConstants.SUCCESS_STATUS.getValue(), activationHistoryDto);
     }
 

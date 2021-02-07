@@ -8,4 +8,5 @@ import smolka.smsapi.model.User;
 
 public interface ActivationHistoryRepository extends JpaRepository<ActivationHistory, Long> {
     Page<ActivationHistory> findAllByUser(Pageable pageable, User user);
+    Long countByUser(User user);
 }

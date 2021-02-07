@@ -6,7 +6,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import smolka.smsapi.dto.*;
 import smolka.smsapi.dto.input.GetActivationHistoryRequest;
-import smolka.smsapi.dto.input.OrderDto;
+import smolka.smsapi.dto.input.OrderRequest;
 import smolka.smsapi.service.activation.ActivationHistoryService;
 import smolka.smsapi.service.activation.CurrentActivationService;
 import smolka.smsapi.service.api_key.UserService;
@@ -25,8 +25,8 @@ public class TestController {
     private UserService userService;
 
     @PostMapping("/order")
-    public ServiceMessage<CurrentActivationCreateInfoDto> order(@RequestBody @Validated OrderDto orderDto) {
-        return currentActivationService.orderActivation(orderDto.getApiKey(), orderDto.getCost(), orderDto.getService(), orderDto.getCountry());
+    public ServiceMessage<CurrentActivationCreateInfoDto> order(@RequestBody @Validated OrderRequest orderRequest) {
+        return currentActivationService.orderActivation(orderRequest.getApiKey(), orderRequest.getCost(), orderRequest.getService(), orderRequest.getCountry());
     }
 
     @GetMapping("/cost")
