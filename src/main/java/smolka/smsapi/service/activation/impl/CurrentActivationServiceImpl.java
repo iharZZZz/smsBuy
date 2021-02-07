@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 public class CurrentActivationServiceImpl implements CurrentActivationService {
@@ -49,8 +48,8 @@ public class CurrentActivationServiceImpl implements CurrentActivationService {
 
     @Override
     @Transactional
-    public ServiceMessage<ActivationInfoDto> orderActivation(String apiKey, BigDecimal cost, String serviceCode, String countryCode) {
-        User user = userService.findUserKey(apiKey);
+    public ServiceMessage<CurrentActivationCreateInfoDto> orderActivation(String apiKey, BigDecimal cost, String serviceCode, String countryCode) {
+        User user = userService.findUserByUserKey(apiKey);
         if (user == null) {
             throw new InternalErrorException("Api key not exists", ErrorDictionary.WRONG_KEY);
         }
@@ -62,40 +61,42 @@ public class CurrentActivationServiceImpl implements CurrentActivationService {
         ReceiverActivationInfoDto receiverActivationInfo = receiversAdapter.orderAttempt(country, service, cost);
         CurrentActivation newActivation = mainMapper.createNewCurrentActivation(receiverActivationInfo, user, country, service, cost, minutesForActivation);
         currentActivationRepository.save(newActivation);
-        ActivationInfoDto activationInfo = mainMapper.mapActivationInfoFromActivation(newActivation);
+        CurrentActivationCreateInfoDto activationInfo = mainMapper.mapActivationInfoFromActivation(newActivation);
         userService.subFromRealBalanceAndAddToFreeze(user, cost);
         return new ServiceMessage<>(SmsConstants.SUCCESS_STATUS.getValue(), activationInfo);
     }
 
     @Override
-    public ServiceMessage<ActivationStatusDto> getCurrentActivationForUser(String apiKey, Long id) {
-        User user = userService.findUserKey(apiKey);
+    public ServiceMessage<ActivationMessageDto> getCurrentActivationForUser(String apiKey, Long id) {
+        User user = userService.findUserByUserKey(apiKey);
         if (user == null) {
             throw new InternalErrorException("Api key not exists", ErrorDictionary.WRONG_KEY);
         }
         CurrentActivation activation = currentActivationRepository.findCurrentActivationByIdAndUser(id, user);
         if (activation == null) {
-            throw new InternalErrorException("This activation not exist", ErrorDictionary.NO_ACTIVATION);
+            ActivationHistory activationHistory = activationHistoryService.findActivationHistoryById(id);
+            if (activationHistory == null) {
+                throw new InternalErrorException("This activation not exist", ErrorDictionary.NO_ACTIVATION);
+            }
+            return new ServiceMessage<>(SmsConstants.SUCCESS_STATUS.getValue(), mainMapper.mapActivationMessageFromActivationHistory(activationHistory));
+        } else {
+            return new ServiceMessage<>(SmsConstants.SUCCESS_STATUS.getValue(), mainMapper.mapActivationMessageFromCurrentActivation(activation));
         }
-        ActivationStatusDto activationStatus = mainMapper.mapActivationStatusFromActivation(activation);
-        return new ServiceMessage<>(SmsConstants.SUCCESS_STATUS.getValue(), activationStatus);
     }
 
     @Override
-    public ServiceMessage<ActivationsStatusDto> getCurrentActivationsForUser(String apiKey) {
-        User user = userService.findUserKey(apiKey);
+    public ServiceMessage<CurrentActivationsStatusDto> getCurrentActivationsForUser(String apiKey) {
+        User user = userService.findUserByUserKey(apiKey);
         if (user == null) {
             throw new InternalErrorException("Api key not exists", ErrorDictionary.WRONG_KEY);
         }
         List<CurrentActivation> activations = currentActivationRepository.findAllCurrentActivationsByUser(user);
-        List<ActivationStatusDto> activationStatusList = activations.stream().map(a -> mainMapper.mapActivationStatusFromActivation(a)).collect(Collectors.toList()); // TODO когда вынесу все остальное в маппер поправить и здесь
-        ActivationsStatusDto activationsStatusDto = new ActivationsStatusDto(activationStatusList);
-        return new ServiceMessage<>(SmsConstants.SUCCESS_STATUS.getValue(), activationsStatusDto);
+        return new ServiceMessage<>(SmsConstants.SUCCESS_STATUS.getValue(), mainMapper.mapActivationsStatusFromCurrentActivations(activations));
     }
 
     @Override
     public CostMapDto getCostsForActivations(String apiKey) {
-        User user = userService.findUserKey(apiKey);
+        User user = userService.findUserByUserKey(apiKey);
         if (user == null) {
             throw new InternalErrorException("Api key not exists", ErrorDictionary.WRONG_KEY);
         }

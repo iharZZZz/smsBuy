@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ActivationStatusDto {
+public class CurrentActivationCreateInfoDto {
     private Long id;
     private String number;
     private String countryCode;
@@ -21,8 +21,5 @@ public class ActivationStatusDto {
     private Integer status;
     @JsonFormat(pattern = "dd.MM.yyyy HH:mm:ss")
     private LocalDateTime createDate;
-    @JsonFormat(pattern = "dd.MM.yyyy HH:mm:ss")
-    private LocalDateTime finishDate;
-    private String message;
     private BigDecimal cost;
 }

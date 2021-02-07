@@ -39,7 +39,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public User findUserKey(String userApiKey) {
+    public User findUserByUserKey(String userApiKey) {
         try {
             return userRepository.findUserByKey(userApiKey);
         }

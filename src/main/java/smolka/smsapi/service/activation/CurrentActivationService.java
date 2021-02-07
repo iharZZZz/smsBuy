@@ -9,9 +9,9 @@ import java.util.List;
 import java.util.Map;
 
 public interface CurrentActivationService {
-    ServiceMessage<ActivationInfoDto> orderActivation(String apiKey, BigDecimal cost, String serviceCode, String countryCode);
-    ServiceMessage<ActivationStatusDto> getCurrentActivationForUser(String apiKey, Long id);
-    ServiceMessage<ActivationsStatusDto> getCurrentActivationsForUser(String apiKey);
+    ServiceMessage<CurrentActivationCreateInfoDto> orderActivation(String apiKey, BigDecimal cost, String serviceCode, String countryCode);
+    ServiceMessage<ActivationMessageDto> getCurrentActivationForUser(String apiKey, Long id);
+    ServiceMessage<CurrentActivationsStatusDto> getCurrentActivationsForUser(String apiKey);
     CostMapDto getCostsForActivations(String apiKey);
     void setMessageForCurrentActivation(CurrentActivation activation, String message);
     List<CurrentActivation> findAllCurrentActivationsWithoutReceivedMessage();

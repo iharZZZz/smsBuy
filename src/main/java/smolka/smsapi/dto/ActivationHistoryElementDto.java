@@ -13,13 +13,16 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ActivationInfoDto {
+public class ActivationHistoryElementDto {
     private Long id;
     private String number;
+    private String message;
     private String countryCode;
     private String serviceCode;
     private Integer status;
     @JsonFormat(pattern = "dd.MM.yyyy HH:mm:ss")
     private LocalDateTime createDate;
+    @JsonFormat(pattern = "dd.MM.yyyy HH:mm:ss")
+    private LocalDateTime finishDate;
     private BigDecimal cost;
 }

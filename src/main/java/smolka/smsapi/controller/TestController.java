@@ -5,7 +5,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import smolka.smsapi.dto.*;
+import smolka.smsapi.dto.input.GetActivationHistoryRequest;
 import smolka.smsapi.dto.input.OrderDto;
+import smolka.smsapi.service.activation.ActivationHistoryService;
 import smolka.smsapi.service.activation.CurrentActivationService;
 import smolka.smsapi.service.api_key.UserService;
 
@@ -14,13 +16,16 @@ import smolka.smsapi.service.api_key.UserService;
 public class TestController {
 
     @Autowired
+    private ActivationHistoryService activationHistoryService;
+
+    @Autowired
     private CurrentActivationService currentActivationService;
 
     @Autowired
     private UserService userService;
 
     @PostMapping("/order")
-    public ServiceMessage<ActivationInfoDto> order(@RequestBody @Validated OrderDto orderDto) {
+    public ServiceMessage<CurrentActivationCreateInfoDto> order(@RequestBody @Validated OrderDto orderDto) {
         return currentActivationService.orderActivation(orderDto.getApiKey(), orderDto.getCost(), orderDto.getService(), orderDto.getCountry());
     }
 
@@ -29,18 +34,23 @@ public class TestController {
         return currentActivationService.getCostsForActivations(apiKey);
     }
 
+    @PostMapping("/getActivationHistory")
+    public ServiceMessage<ActivationHistoryDto> getActivationHistory(@RequestBody GetActivationHistoryRequest getActivationHistoryRequest) {
+        return activationHistoryService.getActivationHistorySortedByFinishDateDesc(getActivationHistoryRequest);
+    }
+
     @GetMapping("/user")
     public ServiceMessage<UserDto> getUserInfo(@RequestParam("apiKey") String apiKey) {
         return userService.getUserInfo(apiKey);
     }
 
     @GetMapping("/currentActivationStatus")
-    public ServiceMessage<ActivationStatusDto> getActivationStatus(@RequestParam("apiKey") String apiKey, @RequestParam("id") Long id) {
+    public ServiceMessage<ActivationMessageDto> getActivationStatus(@RequestParam("apiKey") String apiKey, @RequestParam("id") Long id) {
         return currentActivationService.getCurrentActivationForUser(apiKey, id);
     }
 
     @GetMapping("/allCurrentActivations")
-    public ServiceMessage<ActivationsStatusDto> getAllCurrentActivations(@RequestParam("apiKey") String apiKey) {
+    public ServiceMessage<CurrentActivationsStatusDto> getAllCurrentActivations(@RequestParam("apiKey") String apiKey) {
         return currentActivationService.getCurrentActivationsForUser(apiKey);
     }
 }

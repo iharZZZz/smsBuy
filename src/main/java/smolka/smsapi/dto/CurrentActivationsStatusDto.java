@@ -11,6 +11,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ActivationsStatusDto {
-    private List<ActivationStatusDto> activations;
+public class CurrentActivationsStatusDto {
+    private List<CurrentActivationStatusDto> activations;
 }
