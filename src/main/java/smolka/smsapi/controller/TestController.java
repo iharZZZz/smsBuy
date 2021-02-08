@@ -30,8 +30,8 @@ public class TestController {
     }
 
     @GetMapping("/cost")
-    public CostMapDto getCostMap(@RequestParam("apiKey") String apiKey) {
-        return currentActivationService.getCostsForActivations(apiKey);
+    public CostMapDto getCostMap(@RequestParam("apiKey") String apiKey, @RequestParam(required = false) String country) {
+        return currentActivationService.getCostsForActivations(apiKey, country);
     }
 
     @PostMapping("/getActivationHistory")

@@ -9,7 +9,7 @@ import smolka.smsapi.model.Country;
 import java.math.BigDecimal;
 
 public interface ReceiversAdapter {
-    CostMapDto getCommonCostMap();
+    CostMapDto getCommonCostMap(Country country);
     CommonReceiversActivationInfoMap getReceiversCurrentActivations();
     ReceiverActivationInfoDto orderAttempt(Country country, ActivationTarget service, BigDecimal cost);
 }

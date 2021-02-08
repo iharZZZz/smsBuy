@@ -43,7 +43,7 @@ public class SmsHubReceiver implements RestReceiver {
         ResponseEntity<String> response = null;
         try {
             final String actionName = "getNumber";
-            HttpEntity<MultiValueMap<String, String>> request = SmsHubRequestCreator.createOrderRequest(SMS_HUB_API_KEY, actionName, country, service);
+            HttpEntity<MultiValueMap<String, String>> request = SmsHubRequestCreator.createOrderRequest(SMS_HUB_API_KEY, country, service);
             response = restTemplate.postForEntity(smsHubUrl, request, String.class);
             if (response.getBody() != null && response.getBody().contains("ACCESS_NUMBER")) {
                 return smsHubMapper.extractActivationInfoFromResponse(response.getBody());
@@ -84,11 +84,11 @@ public class SmsHubReceiver implements RestReceiver {
     }
 
     @Override
-    public ReceiverCostMapDto getCostMap() {
+    public ReceiverCostMapDto getCostMap(Country country) {
         ResponseEntity<String> response = null;
         try {
             final String actionName = "getPrices";
-            HttpEntity<MultiValueMap<String, String>> request = SmsHubRequestCreator.createEmptyRequest(SMS_HUB_API_KEY, actionName);
+            HttpEntity<MultiValueMap<String, String>> request = SmsHubRequestCreator.createCostMapRequest(SMS_HUB_API_KEY, country);
             response = restTemplate.postForEntity(smsHubUrl, request, String.class);
             if (response.getStatusCode().is2xxSuccessful() && !SmsHubErrorResponseDictionary.isError(response.getBody())) {
                 return smsHubMapper.mapCostMapForSmsHubJson(response.getBody());

@@ -11,5 +11,5 @@ import java.util.List;
 public interface RestReceiver {
     ReceiverActivationInfoDto orderActivation(Country country, ActivationTarget service);
     List<ReceiverActivationStatusDto> getActivationsStatus();
-    ReceiverCostMapDto getCostMap();
+    ReceiverCostMapDto getCostMap(Country country);
 }

@@ -12,7 +12,7 @@ public interface CurrentActivationService {
     ServiceMessage<CurrentActivationCreateInfoDto> orderActivation(String apiKey, BigDecimal cost, String serviceCode, String countryCode);
     ServiceMessage<ActivationMessageDto> getCurrentActivationForUser(String apiKey, Long id);
     ServiceMessage<CurrentActivationsStatusDto> getCurrentActivationsForUser(String apiKey);
-    CostMapDto getCostsForActivations(String apiKey);
+    CostMapDto getCostsForActivations(String apiKey, String countryCode);
     void setMessageForCurrentActivation(CurrentActivation activation, String message);
     List<CurrentActivation> findAllCurrentActivationsWithoutReceivedMessage();
     void closeCurrentActivationsForUser(User user, List<CurrentActivation> activationsForClose);
