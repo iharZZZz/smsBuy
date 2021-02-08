@@ -10,7 +10,9 @@ import smolka.smsapi.dto.receiver.ReceiverCostMapDto;
 import smolka.smsapi.enums.ActivationStatus;
 import smolka.smsapi.enums.SourceList;
 import smolka.smsapi.model.ActivationTarget;
+import smolka.smsapi.model.Country;
 import smolka.smsapi.repository.ActivationTargetRepository;
+import smolka.smsapi.repository.CountryRepository;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -24,6 +26,8 @@ public class SmsHubMapper {
     private final ObjectMapper objectMapper = new ObjectMapper();
     @Autowired
     private ActivationTargetRepository activationTargetRepository;
+    @Autowired
+    private CountryRepository countryRepository;
 
     public List<ReceiverActivationStatusDto> mapActivationsStatusResponse(Map<String, Object> root) {
         List<Map<String, Object>> arrayActivations = (List<Map<String, Object>>)root.get("array");
@@ -55,17 +59,33 @@ public class SmsHubMapper {
     }
 
     public ReceiverCostMapDto mapCostMapForSmsHubJson(String response) throws JsonProcessingException {
-        Map<String, Object> json = objectMapper.readValue(response, HashMap.class);
+        Map<String, Map<String, Map<String, Integer>>> rootJson = objectMapper.readValue(response, HashMap.class);
         ReceiverCostMapDto costMap = new ReceiverCostMapDto();
         costMap.setSource(SourceList.SMSHUB);
-        final String priceMapKey = "priceMap";
+        List<Country> countries = countryRepository.findAll();
         List<ActivationTarget> services = activationTargetRepository.findAll();
-        for (String s : json.keySet()) {
-            ActivationTarget service = services.stream().filter(serv -> serv.getSmshubServiceCode().equals(s)).findAny().orElse(null);
-            if (service != null) {
-                Map<String, Integer> serviceCosts = (Map<String, Integer>) ((Map<String, Object>)json.get(s)).get(priceMapKey);
-                for (String cost : serviceCosts.keySet()) {
-                    costMap.addCostToMap(service, new BigDecimal(cost), serviceCosts.get(cost));
+        Map<String, Country> countryMap = new HashMap<>();
+        Map<String, ActivationTarget> serviceMap = new HashMap<>();
+        countries.forEach(c -> {
+            countryMap.put(c.getSmshubCountryCode(), c);
+        });
+        services.forEach(s -> {
+            serviceMap.put(s.getSmshubServiceCode(), s);
+        });
+        for (String countryInJson : rootJson.keySet()) {
+            Map<String, Map<String, Integer>> serviceSegment = rootJson.get(countryInJson);
+            Country countryEntity = countryMap.get(countryInJson);
+            if (countryEntity == null) {
+                continue;
+            }
+            for (String serviceInRootJson : serviceSegment.keySet()) {
+                ActivationTarget serviceEntity = serviceMap.get(serviceInRootJson);
+                if (serviceEntity == null) {
+                    continue;
+                }
+                Map<String, Integer> costCountMapForService = serviceSegment.get(serviceInRootJson);
+                for (String cost : costCountMapForService.keySet()) {
+                    costMap.addCostToMap(countryEntity, serviceEntity, new BigDecimal(cost), costCountMapForService.get(cost));
                 }
             }
         }

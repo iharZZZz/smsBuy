@@ -54,12 +54,14 @@ public class MarkUpperServiceImpl implements MarkUpperService {
         if (percentage == 0) {
             return costMapDto;
         }
-        for (String srv : costMapDto.getCostMap().keySet()) {
-            Map<BigDecimal, Integer> costs = costMapDto.getCostMap().get(srv);
-            for (BigDecimal val : costs.keySet()) {
-                Integer tmpCount = costs.get(val);
-                costs.put(val.add(percentage(val, percentage)).setScale(scale, RoundingMode.CEILING), tmpCount);
-                costs.remove(val);
+        for (String country : costMapDto.getCostMap().keySet()) {
+            for (String srv : costMapDto.getCostMap().get(country).keySet()) {
+                Map<BigDecimal, Integer> costs = costMapDto.getCostMap().get(country).get(srv);
+                for (BigDecimal val : costs.keySet()) {
+                    Integer tmpCount = costs.get(val);
+                    costs.put(val.add(percentage(val, percentage)).setScale(scale, RoundingMode.CEILING), tmpCount);
+                    costs.remove(val);
+                }
             }
         }
         return costMapDto;

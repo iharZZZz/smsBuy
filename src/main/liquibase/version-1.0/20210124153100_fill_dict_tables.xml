@@ -8,23 +8,18 @@
 
     <changeSet id="20210124153100"  author="ihar_smolka@senla.eu">
         <insert tableName="COUNTRY">
-            <column name="CODE" value="any"/>
-            <column name="SMSHUB_CODE" value="any"/>
+            <column name="CODE" value="ru"/>
+            <column name="SMSHUB_CODE" value="0"/>
         </insert>
 
         <insert tableName="COUNTRY">
-            <column name="CODE" value="russia"/>
-            <column name="SMSHUB_CODE" value="russia"/>
+            <column name="CODE" value="ua"/>
+            <column name="SMSHUB_CODE" value="1"/>
         </insert>
 
         <insert tableName="COUNTRY">
-            <column name="CODE" value="ukraine"/>
-            <column name="SMSHUB_CODE" value="ukraine"/>
-        </insert>
-
-        <insert tableName="COUNTRY">
-            <column name="CODE" value="kazakhstan"/>
-            <column name="SMSHUB_CODE" value="kazakhstan"/>
+            <column name="CODE" value="kz"/>
+            <column name="SMSHUB_CODE" value="2"/>
         </insert>
 
         <insert tableName="TARGET_SERVICE">

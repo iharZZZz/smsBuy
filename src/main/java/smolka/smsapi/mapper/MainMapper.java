@@ -46,13 +46,14 @@ public class MainMapper {
         if (costMap == null || costMap.getCostMap().isEmpty()) {
             return internalCostMap;
         }
-        for (ActivationTarget service : costMap.getCostMap().keySet()) {
-            Map<BigDecimal, Integer> costs = costMap.getCostMap().get(service);
-            for (BigDecimal cost : costs.keySet()) {
-                BigDecimal newCost = new BigDecimal(cost.toString());
-                newCost = newCost.setScale(scale, RoundingMode.CEILING);
-                String internalServiceCode = service.getServiceCode();
-                internalCostMap.addCostToMapWithAdd(internalServiceCode, newCost, costs.get(cost));
+        for (Country country : costMap.getCostMap().keySet()) {
+            for (ActivationTarget service : costMap.getCostMap().get(country).keySet()) {
+                Map<BigDecimal, Integer> costs = costMap.getCostMap().get(country).get(service);
+                for (BigDecimal cost : costs.keySet()) {
+                    BigDecimal newCost = new BigDecimal(cost.toString());
+                    newCost = newCost.setScale(scale, RoundingMode.CEILING);
+                    internalCostMap.addCostToMapWithAdd(country, service, newCost, costs.get(cost));
+                }
             }
         }
         return internalCostMap;

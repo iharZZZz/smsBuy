@@ -47,7 +47,7 @@ public class ReceiversAdapterImpl implements ReceiversAdapter {
 
     private ReceiverActivationInfoDto attemptToSmsHub(Country country, ActivationTarget service, BigDecimal cost) {
         ReceiverCostMapDto costMap = getCostMapFromSmsHub();
-        if (!costMap.isExists(service, cost)) {
+        if (!costMap.isExists(country, service, cost)) {
             throw new InternalErrorException("No numbers", ErrorDictionary.NO_NUMBER);
         }
         return smsHubReceiver.orderActivation(country, service);

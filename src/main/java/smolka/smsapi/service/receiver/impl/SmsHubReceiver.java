@@ -87,7 +87,7 @@ public class SmsHubReceiver implements RestReceiver {
     public ReceiverCostMapDto getCostMap() {
         ResponseEntity<String> response = null;
         try {
-            final String actionName = "getNumbersStatusAndCostHubFree";
+            final String actionName = "getPrices";
             HttpEntity<MultiValueMap<String, String>> request = SmsHubRequestCreator.createEmptyRequest(SMS_HUB_API_KEY, actionName);
             response = restTemplate.postForEntity(smsHubUrl, request, String.class);
             if (response.getStatusCode().is2xxSuccessful() && !SmsHubErrorResponseDictionary.isError(response.getBody())) {
