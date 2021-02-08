@@ -42,7 +42,19 @@ public class ActivationHistoryServiceImpl implements ActivationHistoryService {
             throw new InternalErrorException("Api key not exists", ErrorDictionary.WRONG_KEY);
         }
         Pageable pageableForActivationHistoryWithSortFinishDateAsc = mainMapper.mapPageableFromCustomPageRequest(getActivationHistoryRequest, SortDictionary.ACTIVATION_HISTORY_SORT_FINISH_DATE_DESC);
-        Page<ActivationHistory> activationHistory = activationHistoryRepository.findAllByUser(pageableForActivationHistoryWithSortFinishDateAsc, user);
+        Page<ActivationHistory> activationHistory = null;
+        if (getActivationHistoryRequest.getStartDateBefore() == null && getActivationHistoryRequest.getStartDateAfter() == null) {
+            activationHistory = activationHistoryRepository.findAllByUser(pageableForActivationHistoryWithSortFinishDateAsc, user);
+        }
+        if (getActivationHistoryRequest.getStartDateBefore() == null) {
+            activationHistory = activationHistoryRepository.findAllByUserAndCreateDateGreaterThanEqual(user, getActivationHistoryRequest.getStartDateAfter().atStartOfDay(), pageableForActivationHistoryWithSortFinishDateAsc);
+        }
+        if (getActivationHistoryRequest.getStartDateAfter() == null) {
+            activationHistory = activationHistoryRepository.findAllByUserAndCreateDateLessThanEqual(user, getActivationHistoryRequest.getStartDateBefore().atStartOfDay(), pageableForActivationHistoryWithSortFinishDateAsc);
+        }
+        if (getActivationHistoryRequest.getStartDateAfter() != null && getActivationHistoryRequest.getStartDateBefore() != null) {
+            activationHistory = activationHistoryRepository.findAllByUserAndCreateDateGreaterThanEqualAndCreateDateLessThanEqual(user, getActivationHistoryRequest.getStartDateAfter().atStartOfDay(), getActivationHistoryRequest.getStartDateBefore().atStartOfDay(), pageableForActivationHistoryWithSortFinishDateAsc);
+        }
         ActivationHistoryDto activationHistoryDto = mainMapper.mapActivationHistoryDtoFromActivationHistoryListAndCount(activationHistory.toList(), pageableForActivationHistoryWithSortFinishDateAsc, activationHistoryRepository.countByUser(user));
         return new ServiceMessage<>(SmsConstants.SUCCESS_STATUS.getValue(), activationHistoryDto);
     }
