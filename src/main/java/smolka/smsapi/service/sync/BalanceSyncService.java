@@ -1,15 +1,10 @@
-package smolka.smsapi.service.api_key;
+package smolka.smsapi.service.sync;
 
-import smolka.smsapi.dto.ServiceMessage;
-import smolka.smsapi.dto.UserDto;
 import smolka.smsapi.model.User;
 
 import java.math.BigDecimal;
 
-public interface UserService {
-    void delete(String userApiKey);
-    User findUserByUserKey(String userApiKey);
-    ServiceMessage<UserDto> getUserInfo(String userApiKey);
+public interface BalanceSyncService {
     Boolean orderIsPossible(User user, BigDecimal orderCost);
     User subFromRealBalanceAndAddToFreeze(User user, BigDecimal sum);
     User subFromFreezeAndAddToRealBalance(User user, BigDecimal sum);

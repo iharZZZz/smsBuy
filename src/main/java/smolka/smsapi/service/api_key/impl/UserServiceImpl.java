@@ -15,6 +15,7 @@ import smolka.smsapi.repository.UserRepository;
 import smolka.smsapi.service.api_key.UserService;
 
 import java.math.BigDecimal;
+import java.util.concurrent.ArrayBlockingQueue;
 
 @Service
 @Slf4j
@@ -63,7 +64,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional(propagation = Propagation.MANDATORY)
+    public Boolean orderIsPossible(User user, BigDecimal orderCost) {
+        return user.getBalance().compareTo(orderCost) >= 0;
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED)
     public User subFromRealBalanceAndAddToFreeze(User user, BigDecimal sum) {
         BigDecimal subBalance = user.getBalance().subtract(sum);
         if (subBalance.compareTo(BigDecimal.ZERO) < 0) {
@@ -75,7 +81,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional(propagation = Propagation.MANDATORY)
+    @Transactional(propagation = Propagation.REQUIRED)
     public User subFromFreezeAndAddToRealBalance(User user, BigDecimal sum) {
         BigDecimal subFreezeBalance = user.getFreezeBalance().subtract(sum);
         if (subFreezeBalance.compareTo(BigDecimal.ZERO) < 0) {
@@ -87,11 +93,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional(propagation = Propagation.MANDATORY)
+    @Transactional(propagation = Propagation.REQUIRED)
     public User subFromFreeze(User user, BigDecimal sum) {
         BigDecimal subFreezeBalance = user.getFreezeBalance().subtract(sum);
         if (subFreezeBalance.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Замороженный баланс не может быть отрицательным");
+            throw new IllegalArgumentException("Замороженный баланс не может быть отрицательным"); // TODO: здесь кидается ошибка когда спамлю заказами, видимо не все так красиво с многопоточнстью как я рассчитывал когда писал этого ублюдка. озможно зажевывает добавление к фриз-балансу, и по итогу фриз-баланс слишком маленький чтобы отнять от него нужную сумму
         }
         user.setFreezeBalance(subFreezeBalance);
         return userRepository.save(user);

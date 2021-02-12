@@ -17,6 +17,7 @@ import smolka.smsapi.service.activation.ActivationHistoryService;
 import smolka.smsapi.service.activation.CurrentActivationService;
 import smolka.smsapi.service.api_key.UserService;
 import smolka.smsapi.service.receiver.ReceiversAdapter;
+import smolka.smsapi.service.sync.BalanceSyncService;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -44,6 +45,8 @@ public class CurrentActivationServiceImpl implements CurrentActivationService {
     private ReceiversAdapter receiversAdapter;
     @Autowired
     private UserService userService;
+    @Autowired
+    private BalanceSyncService balanceSyncService;
 
 
     @Override
@@ -53,7 +56,7 @@ public class CurrentActivationServiceImpl implements CurrentActivationService {
         if (user == null) {
             throw new InternalErrorException("Api key not exists", ErrorDictionary.WRONG_KEY);
         }
-        if (user.getBalance().compareTo(cost) < 0) { // TODO: слабое место
+        if (!balanceSyncService.orderIsPossible(user, cost)) {
             throw new InternalErrorException("User balance is empty", ErrorDictionary.NO_BALANCE);
         }
         ActivationTarget service = activationTargetRepository.findByServiceCode(serviceCode);
@@ -62,7 +65,7 @@ public class CurrentActivationServiceImpl implements CurrentActivationService {
         CurrentActivation newActivation = mainMapper.createNewCurrentActivation(receiverActivationInfo, user, country, service, cost, minutesForActivation);
         currentActivationRepository.save(newActivation);
         CurrentActivationCreateInfoDto activationInfo = mainMapper.mapActivationInfoFromActivation(newActivation);
-        userService.subFromRealBalanceAndAddToFreeze(user, cost);
+        balanceSyncService.subFromRealBalanceAndAddToFreeze(user, cost);
         return new ServiceMessage<>(SmsConstants.SUCCESS_STATUS.getValue(), activationInfo);
     }
 
@@ -127,7 +130,7 @@ public class CurrentActivationServiceImpl implements CurrentActivationService {
         BigDecimal sum = activationsForClose.stream()
                 .map(CurrentActivation::getCost)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        userService.subFromFreezeAndAddToRealBalance(user, sum);
+        balanceSyncService.subFromFreezeAndAddToRealBalance(user, sum);
     }
 
     @Override
@@ -141,7 +144,7 @@ public class CurrentActivationServiceImpl implements CurrentActivationService {
         BigDecimal sum = activationsForSucceed.stream()
                 .map(CurrentActivation::getCost)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        userService.subFromFreeze(user, sum);
+        balanceSyncService.subFromFreeze(user, sum);
     }
 
     @Override
