@@ -79,7 +79,7 @@ public class MainConfiguration {
     @Bean
     public JpaVendorAdapter jpaVendorAdapter() {
         HibernateJpaVendorAdapter hibernateJpaVendorAdapter = new HibernateJpaVendorAdapter();
-        hibernateJpaVendorAdapter.setShowSql(true);
+        hibernateJpaVendorAdapter.setShowSql(false);
         hibernateJpaVendorAdapter.setGenerateDdl(false);
         return hibernateJpaVendorAdapter;
     }
