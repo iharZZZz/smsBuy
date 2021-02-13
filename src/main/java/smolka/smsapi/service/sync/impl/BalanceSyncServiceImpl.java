@@ -1,12 +1,11 @@
-package smolka.smsapi.service.sync;
+package smolka.smsapi.service.sync.impl;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import smolka.smsapi.model.User;
 import smolka.smsapi.service.api_key.UserService;
+import smolka.smsapi.service.sync.BalanceSyncService;
 
 import java.math.BigDecimal;
 import java.util.Map;
@@ -76,8 +75,8 @@ public class BalanceSyncServiceImpl implements BalanceSyncService {
             FutureTask<T> futureResult = new FutureTask<T>(worker);
             new Thread(futureResult).start();
             return futureResult.get();
-        } catch (Exception ignore) {
-            return null;
+        } catch (Exception exc) {
+            throw new RuntimeException(exc); // TODO: подумать над исключениями
         }
     }
     
