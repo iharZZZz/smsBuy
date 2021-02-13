@@ -3,6 +3,7 @@ package smolka.smsapi.service.activation.impl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import smolka.smsapi.dto.*;
 import smolka.smsapi.dto.receiver.ReceiverActivationInfoDto;
@@ -50,7 +51,7 @@ public class CurrentActivationServiceImpl implements CurrentActivationService {
 
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public ServiceMessage<CurrentActivationCreateInfoDto> orderActivation(String apiKey, BigDecimal cost, String serviceCode, String countryCode) {
         User user = userService.findUserByUserKey(apiKey);
         if (user == null) {
@@ -107,7 +108,7 @@ public class CurrentActivationServiceImpl implements CurrentActivationService {
     }
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void setMessageForCurrentActivation(CurrentActivation activation, String message) {
         activation.setMessage(message);
         activation.setStatus(ActivationStatus.SMS_RECEIVED.getCode());
@@ -120,7 +121,7 @@ public class CurrentActivationServiceImpl implements CurrentActivationService {
     }
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void closeCurrentActivationsForUser(User user, List<CurrentActivation> activationsForClose) {
         if (activationsForClose.isEmpty()) {
             return;
@@ -134,7 +135,7 @@ public class CurrentActivationServiceImpl implements CurrentActivationService {
     }
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void succeedCurrentActivationsForUser(User user, List<CurrentActivation> activationsForSucceed) {
         if (activationsForSucceed.isEmpty()) {
             return;

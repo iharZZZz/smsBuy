@@ -27,7 +27,7 @@ public class UserServiceImpl implements UserService {
     private MainMapper mainMapper;
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void delete(String userApiKey) {
         try {
             userRepository.deleteByKey(userApiKey);
