@@ -98,12 +98,12 @@ public class CurrentActivationServiceImpl implements CurrentActivationService {
     }
 
     @Override
-    public CostMapDto getCostsForActivations(String apiKey, String countryCode) {
+    public ServiceMessage<CostMapDto> getCostsForActivations(String apiKey, String countryCode) {
         User user = userService.findUserByUserKey(apiKey);
         if (user == null) {
             throw new InternalErrorException("Api key not exists", ErrorDictionary.WRONG_KEY);
         }
-        return receiversAdapter.getCommonCostMap(countryRepository.findByCountryCode(countryCode));
+        return new ServiceMessage<>(SmsConstants.SUCCESS_STATUS.getValue(), receiversAdapter.getCommonCostMap(countryRepository.findByCountryCode(countryCode)));
     }
 
     @Override

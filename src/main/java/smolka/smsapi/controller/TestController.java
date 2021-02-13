@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import smolka.smsapi.dto.*;
 import smolka.smsapi.dto.input.GetActivationHistoryRequest;
 import smolka.smsapi.dto.input.OrderRequest;
+import smolka.smsapi.enums.SmsConstants;
 import smolka.smsapi.service.activation.ActivationHistoryService;
 import smolka.smsapi.service.activation.CurrentActivationService;
 import smolka.smsapi.service.api_key.UserService;
@@ -30,7 +31,7 @@ public class TestController {
     }
 
     @GetMapping("/cost")
-    public CostMapDto getCostMap(@RequestParam("apiKey") String apiKey, @RequestParam(required = false) String country) {
+    public ServiceMessage<CostMapDto> getCostMap(@RequestParam("apiKey") String apiKey, @RequestParam(required = false) String country) {
         return currentActivationService.getCostsForActivations(apiKey, country);
     }
 
