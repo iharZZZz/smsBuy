@@ -15,7 +15,6 @@ import smolka.smsapi.repository.UserRepository;
 import smolka.smsapi.service.api_key.UserService;
 
 import java.math.BigDecimal;
-import java.util.concurrent.ArrayBlockingQueue;
 
 @Service
 @Slf4j
@@ -65,12 +64,20 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Boolean orderIsPossible(User user, BigDecimal orderCost) {
+        user = userRepository.findUserByUserId(user.getUserId());
+        if (user == null) {
+            throw new InternalErrorException("Данного юзера не существует");
+        }
         return user.getBalance().compareTo(orderCost) >= 0;
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public User subFromRealBalanceAndAddToFreeze(User user, BigDecimal sum) {
+        user = userRepository.findUserByUserId(user.getUserId());
+        if (user == null) {
+            throw new InternalErrorException("Данного юзера не существует");
+        }
         BigDecimal subBalance = user.getBalance().subtract(sum);
         if (subBalance.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Баланс не может быть отрицательным");
@@ -83,6 +90,10 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public User subFromFreezeAndAddToRealBalance(User user, BigDecimal sum) {
+        user = userRepository.findUserByUserId(user.getUserId());
+        if (user == null) {
+            throw new InternalErrorException("Данного юзера не существует");
+        }
         BigDecimal subFreezeBalance = user.getFreezeBalance().subtract(sum);
         if (subFreezeBalance.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Замороженный баланс не может быть отрицательным");
@@ -95,9 +106,13 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public User subFromFreeze(User user, BigDecimal sum) {
+        user = userRepository.findUserByUserId(user.getUserId());
+        if (user == null) {
+            throw new InternalErrorException("Данного юзера не существует");
+        }
         BigDecimal subFreezeBalance = user.getFreezeBalance().subtract(sum);
         if (subFreezeBalance.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Замороженный баланс не может быть отрицательным"); // TODO: здесь кидается ошибка когда спамлю заказами, видимо не все так красиво с многопоточнстью как я рассчитывал когда писал этого ублюдка. озможно зажевывает добавление к фриз-балансу, и по итогу фриз-баланс слишком маленький чтобы отнять от него нужную сумму
+            throw new IllegalArgumentException("Замороженный баланс не может быть отрицательным");
         }
         user.setFreezeBalance(subFreezeBalance);
         return userRepository.save(user);
