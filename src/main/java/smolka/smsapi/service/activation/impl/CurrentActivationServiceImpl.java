@@ -51,7 +51,7 @@ public class CurrentActivationServiceImpl implements CurrentActivationService {
 
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public ServiceMessage<CurrentActivationCreateInfoDto> orderActivation(String apiKey, BigDecimal cost, String serviceCode, String countryCode) {
         User user = userService.findUserByUserKey(apiKey);
         if (user == null) {
@@ -108,7 +108,7 @@ public class CurrentActivationServiceImpl implements CurrentActivationService {
     }
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public void setMessageForCurrentActivation(CurrentActivation activation, String message) {
         activation.setMessage(message);
         activation.setStatus(ActivationStatus.SMS_RECEIVED.getCode());
@@ -121,7 +121,7 @@ public class CurrentActivationServiceImpl implements CurrentActivationService {
     }
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public void closeCurrentActivationsForUser(User user, List<CurrentActivation> activationsForClose) {
         if (activationsForClose.isEmpty()) {
             return;
@@ -135,7 +135,7 @@ public class CurrentActivationServiceImpl implements CurrentActivationService {
     }
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public void succeedCurrentActivationsForUser(User user, List<CurrentActivation> activationsForSucceed) {
         if (activationsForSucceed.isEmpty()) {
             return;

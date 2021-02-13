@@ -27,7 +27,7 @@ public class UserServiceImpl implements UserService {
     private MainMapper mainMapper;
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public void delete(String userApiKey) {
         try {
             userRepository.deleteByKey(userApiKey);
@@ -72,7 +72,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRED)
+    @Transactional
     public User subFromRealBalanceAndAddToFreeze(User user, BigDecimal sum) {
         user = userRepository.findUserByUserId(user.getUserId());
         if (user == null) {
@@ -88,7 +88,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRED)
+    @Transactional
     public User subFromFreezeAndAddToRealBalance(User user, BigDecimal sum) {
         user = userRepository.findUserByUserId(user.getUserId());
         if (user == null) {
@@ -104,7 +104,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRED)
+    @Transactional
     public User subFromFreeze(User user, BigDecimal sum) {
         user = userRepository.findUserByUserId(user.getUserId());
         if (user == null) {
