@@ -3,8 +3,10 @@ package smolka.smsapi.service.sync.impl;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import smolka.smsapi.exception.InternalErrorException;
 import smolka.smsapi.model.User;
-import smolka.smsapi.service.api_key.UserService;
+import smolka.smsapi.repository.UserRepository;
 import smolka.smsapi.service.sync.BalanceSyncService;
 
 import java.math.BigDecimal;
@@ -17,7 +19,13 @@ import java.util.concurrent.locks.ReentrantLock;
 public class BalanceSyncServiceImpl implements BalanceSyncService {
 
     @Autowired
-    private UserService userService;
+    private UserRepository userRepository;
+
+    @AllArgsConstructor
+    private static class SyncBlock {
+         final Lock locker;
+         Integer lockCount;
+    }
 
     private interface BalanceOperationLambda<T> {
         T getResultOfOperation(User user, BigDecimal sum);
@@ -42,49 +50,126 @@ public class BalanceSyncServiceImpl implements BalanceSyncService {
         }
     }
 
-    private final Map<Long, Lock> workersMap = new ConcurrentHashMap<>();
+    private final Map<Long, SyncBlock> workersSyncMap = new ConcurrentHashMap<>();
+    private final Lock mapLocker = new ReentrantLock();
 
     @Override
     public Boolean orderIsPossible(User user, BigDecimal orderCost) {
-        BalanceOperationLambda<Boolean> orderIsPossible = (userArg, sum) -> userService.orderIsPossible(userArg, sum);
+        BalanceOperationLambda<Boolean> orderIsPossible = this::orderIsPossibleOperation;
         return getResult(orderIsPossible, user, orderCost);
     }
 
     @Override
     public User subFromRealBalanceAndAddToFreeze(User user, BigDecimal sum) {
-        BalanceOperationLambda<User> subFromRealBalanceAndAddToFreeze = (userArg, sumArg) -> userService.subFromRealBalanceAndAddToFreeze(userArg, sumArg);
+        BalanceOperationLambda<User> subFromRealBalanceAndAddToFreeze = this::subFromRealBalanceAndAddToFreezeOperation;
         return getResult(subFromRealBalanceAndAddToFreeze, user, sum);
     }
 
     @Override
     public User subFromFreezeAndAddToRealBalance(User user, BigDecimal sum) {
-        BalanceOperationLambda<User> subFromFreezeAndAddToRealBalance = (userArg, sumArg) -> userService.subFromFreezeAndAddToRealBalance(userArg, sumArg);
+        BalanceOperationLambda<User> subFromFreezeAndAddToRealBalance = this::subFromFreezeAndAddToRealBalanceOperation;
         return getResult(subFromFreezeAndAddToRealBalance, user, sum);
     }
 
     @Override
     public User subFromFreeze(User user, BigDecimal sum) {
-        BalanceOperationLambda<User> subFromFreeze = (userArg, sumArg) -> userService.subFromFreeze(userArg, sumArg);
+        BalanceOperationLambda<User> subFromFreeze = this::subFromFreezeOperation;
         return getResult(subFromFreeze, user, sum);
     }
 
     private <T> T getResult(BalanceOperationLambda<T> operation, User user, BigDecimal cost) {
         try {
-            workersMap.putIfAbsent(user.getUserId(), new ReentrantLock());
+            putInMapOrIncLockerCount(user);
             Worker<T> worker = new Worker<>(this, operation, cost, user);
             FutureTask<T> futureResult = new FutureTask<T>(worker);
             new Thread(futureResult).start();
             return futureResult.get();
         } catch (Exception exc) {
-            throw new RuntimeException(exc); // TODO: подумать над исключениями
+            throw new RuntimeException(exc);
+        }
+    }
+
+    private void putInMapOrIncLockerCount(User user) {
+        mapLocker.lock();
+        try {
+            workersSyncMap.putIfAbsent(user.getUserId(), new SyncBlock(new ReentrantLock(), 0));
+            workersSyncMap.get(user.getUserId()).lockCount++;
+        } finally {
+            mapLocker.unlock();
+        }
+    }
+
+    private void decLockerCountOrDropSyncBlock(User user) {
+        mapLocker.lock();
+        try {
+            workersSyncMap.get(user.getUserId()).lockCount--;
+            if (workersSyncMap.get(user.getUserId()).lockCount == 0) {
+                workersSyncMap.remove(user.getUserId());
+            }
+        } finally {
+            mapLocker.unlock();
         }
     }
     
     private void entryInSyncBlock(User user) {
-        workersMap.get(user.getUserId()).lock();
+        workersSyncMap.get(user.getUserId()).locker.lock();
     }
 
     private void release(User user) {
-        workersMap.get(user.getUserId()).unlock();
+        workersSyncMap.get(user.getUserId()).locker.unlock();
+        decLockerCountOrDropSyncBlock(user);
+    }
+
+    @Transactional
+    private Boolean orderIsPossibleOperation(User user, BigDecimal orderCost) {
+        user = userRepository.findUserByUserId(user.getUserId());
+        if (user == null) {
+            throw new InternalErrorException("Данного юзера не существует");
+        }
+        return user.getBalance().compareTo(orderCost) >= 0;
+    }
+
+    @Transactional
+    private User subFromRealBalanceAndAddToFreezeOperation(User user, BigDecimal sum) {
+        user = userRepository.findUserByUserId(user.getUserId());
+        if (user == null) {
+            throw new InternalErrorException("Данного юзера не существует");
+        }
+        BigDecimal subBalance = user.getBalance().subtract(sum);
+        if (subBalance.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Баланс не может быть отрицательным");
+        }
+        user.setBalance(subBalance);
+        user.setFreezeBalance(user.getFreezeBalance().add(sum));
+        return userRepository.save(user);
+    }
+
+    @Transactional
+    private User subFromFreezeAndAddToRealBalanceOperation(User user, BigDecimal sum) {
+        user = userRepository.findUserByUserId(user.getUserId());
+        if (user == null) {
+            throw new InternalErrorException("Данного юзера не существует");
+        }
+        BigDecimal subFreezeBalance = user.getFreezeBalance().subtract(sum);
+        if (subFreezeBalance.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Замороженный баланс не может быть отрицательным");
+        }
+        user.setFreezeBalance(user.getBalance());
+        user.setBalance(user.getBalance().add(sum));
+        return userRepository.save(user);
+    }
+
+    @Transactional
+    private User subFromFreezeOperation(User user, BigDecimal sum) {
+        user = userRepository.findUserByUserId(user.getUserId());
+        if (user == null) {
+            throw new InternalErrorException("Данного юзера не существует");
+        }
+        BigDecimal subFreezeBalance = user.getFreezeBalance().subtract(sum);
+        if (subFreezeBalance.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Замороженный баланс не может быть отрицательным");
+        }
+        user.setFreezeBalance(subFreezeBalance);
+        return userRepository.save(user);
     }
 }

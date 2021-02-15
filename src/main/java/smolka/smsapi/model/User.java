@@ -38,4 +38,5 @@ public class User {
 
     @Column(name = "FREEZE_BALANCE")
     private BigDecimal freezeBalance;
+
 }
