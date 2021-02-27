@@ -54,24 +54,28 @@ public class BalanceSyncServiceImpl implements BalanceSyncService {
     private final Lock mapLocker = new ReentrantLock();
 
     @Override
+    @Transactional
     public Boolean orderIsPossible(User user, BigDecimal orderCost) {
         BalanceOperationLambda<Boolean> orderIsPossible = this::orderIsPossibleOperation;
         return getResult(orderIsPossible, user, orderCost);
     }
 
     @Override
+    @Transactional
     public User subFromRealBalanceAndAddToFreeze(User user, BigDecimal sum) {
         BalanceOperationLambda<User> subFromRealBalanceAndAddToFreeze = this::subFromRealBalanceAndAddToFreezeOperation;
         return getResult(subFromRealBalanceAndAddToFreeze, user, sum);
     }
 
     @Override
+    @Transactional
     public User subFromFreezeAndAddToRealBalance(User user, BigDecimal sum) {
         BalanceOperationLambda<User> subFromFreezeAndAddToRealBalance = this::subFromFreezeAndAddToRealBalanceOperation;
         return getResult(subFromFreezeAndAddToRealBalance, user, sum);
     }
 
     @Override
+    @Transactional
     public User subFromFreeze(User user, BigDecimal sum) {
         BalanceOperationLambda<User> subFromFreeze = this::subFromFreezeOperation;
         return getResult(subFromFreeze, user, sum);
@@ -120,7 +124,7 @@ public class BalanceSyncServiceImpl implements BalanceSyncService {
         decLockerCountOrDropSyncBlock(user);
     }
 
-    @Transactional
+
     private Boolean orderIsPossibleOperation(User user, BigDecimal orderCost) {
         user = userRepository.findUserByUserId(user.getUserId());
         if (user == null) {
@@ -129,7 +133,6 @@ public class BalanceSyncServiceImpl implements BalanceSyncService {
         return user.getBalance().compareTo(orderCost) >= 0;
     }
 
-    @Transactional
     private User subFromRealBalanceAndAddToFreezeOperation(User user, BigDecimal sum) {
         user = userRepository.findUserByUserId(user.getUserId());
         if (user == null) {
@@ -144,7 +147,6 @@ public class BalanceSyncServiceImpl implements BalanceSyncService {
         return userRepository.save(user);
     }
 
-    @Transactional
     private User subFromFreezeAndAddToRealBalanceOperation(User user, BigDecimal sum) {
         user = userRepository.findUserByUserId(user.getUserId());
         if (user == null) {
@@ -154,12 +156,11 @@ public class BalanceSyncServiceImpl implements BalanceSyncService {
         if (subFreezeBalance.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Замороженный баланс не может быть отрицательным");
         }
-        user.setFreezeBalance(user.getBalance());
+        user.setFreezeBalance(subFreezeBalance);
         user.setBalance(user.getBalance().add(sum));
         return userRepository.save(user);
     }
 
-    @Transactional
     private User subFromFreezeOperation(User user, BigDecimal sum) {
         user = userRepository.findUserByUserId(user.getUserId());
         if (user == null) {

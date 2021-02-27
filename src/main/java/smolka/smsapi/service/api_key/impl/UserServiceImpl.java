@@ -3,7 +3,6 @@ package smolka.smsapi.service.api_key.impl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import smolka.smsapi.dto.ServiceMessage;
 import smolka.smsapi.dto.UserDto;
@@ -13,8 +12,6 @@ import smolka.smsapi.mapper.MainMapper;
 import smolka.smsapi.model.User;
 import smolka.smsapi.repository.UserRepository;
 import smolka.smsapi.service.api_key.UserService;
-
-import java.math.BigDecimal;
 
 @Service
 @Slf4j
@@ -38,7 +35,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public User findUserByUserKey(String userApiKey) {
         try {
             return userRepository.findUserByKey(userApiKey);

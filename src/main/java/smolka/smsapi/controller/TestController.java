@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.*;
 import smolka.smsapi.dto.*;
 import smolka.smsapi.dto.input.GetActivationHistoryRequest;
 import smolka.smsapi.dto.input.OrderRequest;
-import smolka.smsapi.enums.SmsConstants;
 import smolka.smsapi.service.activation.ActivationHistoryService;
 import smolka.smsapi.service.activation.CurrentActivationService;
 import smolka.smsapi.service.api_key.UserService;
