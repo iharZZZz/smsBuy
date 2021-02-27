@@ -31,8 +31,6 @@ public class MainMapper {
     private Integer scale;
     @Autowired
     private ModelMapper modelMapper;
-    @Autowired
-    private ActivationTargetRepository activationTargetRepository;
 
     public <E, D> D mapping(E object, Class<D> clazz) {
         if (object == null) {

@@ -13,7 +13,7 @@ import smolka.smsapi.dto.receiver.ReceiverActivationStatusDto;
 import smolka.smsapi.dto.receiver.ReceiverCostMapDto;
 import smolka.smsapi.enums.*;
 import smolka.smsapi.enums.smshub.SmsHubErrorResponseDictionary;
-import smolka.smsapi.exception.InternalErrorException;
+import smolka.smsapi.exception.ReceiverException;
 import smolka.smsapi.mapper.SmsHubMapper;
 import smolka.smsapi.model.ActivationTarget;
 import smolka.smsapi.model.Country;
@@ -39,28 +39,24 @@ public class SmsHubReceiver implements RestReceiver {
     private String smsHubUrl;
 
     @Override
-    public ReceiverActivationInfoDto orderActivation(Country country, ActivationTarget service) {
+    public ReceiverActivationInfoDto orderActivation(Country country, ActivationTarget service) throws ReceiverException {
         ResponseEntity<String> response = null;
         try {
-            final String actionName = "getNumber";
             HttpEntity<MultiValueMap<String, String>> request = SmsHubRequestCreator.createOrderRequest(SMS_HUB_API_KEY, country, service);
             response = restTemplate.postForEntity(smsHubUrl, request, String.class);
-            if (response.getBody() != null && response.getBody().contains("ACCESS_NUMBER")) {
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null && response.getBody().contains("ACCESS_NUMBER")) {
                 return smsHubMapper.extractActivationInfoFromResponse(response.getBody());
             } else {
-                throw new Exception("Not successful json at orderActivation method");
+                throw new Exception("Неизвестный формат ответа");
             }
         }
         catch (Exception exc) {
-            String errorMessage = response == null || response.getBody() == null ? "" : response.getBody();
-            ErrorDictionary error = SmsHubErrorResponseDictionary.getError(errorMessage);
-            log.error("error processing order with response " +errorMessage);
-            throw new InternalErrorException(exc.getMessage(), error);
+            throw new ReceiverException("[SMS-HUB] Ошибка при заказе номера ", response, SourceList.SMSHUB);
         }
     }
 
     @Override
-    public List<ReceiverActivationStatusDto> getActivationsStatus() {
+    public List<ReceiverActivationStatusDto> getActivationsStatus() throws ReceiverException {
         ResponseEntity<String> response = null;
         try {
             final String actionName = "getCurrentActivations";
@@ -73,33 +69,26 @@ public class SmsHubReceiver implements RestReceiver {
             if (activationStatusMap.get("msg") != null && activationStatusMap.get("msg").equals("no_activations")) {
                 return new ArrayList<>();
             }
-            throw new Exception("Not successful json at orderActivation method");
+            throw new Exception("Неизвестный формат ответа");
         }
         catch (Exception exc) {
-            String errorResponse = response == null || response.getBody() == null ? "NULL" :response.getBody();
-            log.error("error processing activations status " + errorResponse);
-            ErrorDictionary error = SmsHubErrorResponseDictionary.getError(errorResponse);
-            throw new InternalErrorException(exc.getMessage(), error);
+            throw new ReceiverException("[SMS-HUB] Ошибка при запросе статуса активаций ", response, SourceList.SMSHUB);
         }
     }
 
     @Override
-    public ReceiverCostMapDto getCostMap(Country country) {
+    public ReceiverCostMapDto getCostMap(Country country) throws ReceiverException {
         ResponseEntity<String> response = null;
         try {
-            final String actionName = "getPrices";
             HttpEntity<MultiValueMap<String, String>> request = SmsHubRequestCreator.createCostMapRequest(SMS_HUB_API_KEY, country);
             response = restTemplate.postForEntity(smsHubUrl, request, String.class);
             if (response.getStatusCode().is2xxSuccessful() && !SmsHubErrorResponseDictionary.isError(response.getBody())) {
                 return smsHubMapper.mapCostMapForSmsHubJson(response.getBody());
             } else {
-                throw new Exception("Not successful json at getCostMap method");
+                throw new Exception("Неизвестный формат ответа");
             }
         } catch (Exception exc) {
-            String errorResponse = response == null || response.getBody() == null ? "NULL" :response.getBody();
-            log.error("error processing cost map " + errorResponse);
-            ErrorDictionary error = SmsHubErrorResponseDictionary.getError(errorResponse);
-            throw new InternalErrorException(exc.getMessage(), error);
+            throw new ReceiverException("[SMS-HUB] Ошибка при запросе цен ", response, SourceList.SMSHUB);
         }
     }
 }

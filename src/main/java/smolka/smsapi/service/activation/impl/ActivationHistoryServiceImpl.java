@@ -9,10 +9,10 @@ import smolka.smsapi.dto.ActivationHistoryDto;
 import smolka.smsapi.dto.ServiceMessage;
 import smolka.smsapi.dto.input.GetActivationHistoryRequest;
 import smolka.smsapi.enums.ActivationStatus;
-import smolka.smsapi.enums.ErrorDictionary;
+import smolka.smsapi.enums.ReceiverErrorDictionary;
 import smolka.smsapi.enums.SmsConstants;
 import smolka.smsapi.enums.SortDictionary;
-import smolka.smsapi.exception.InternalErrorException;
+import smolka.smsapi.exception.UserNotFoundException;
 import smolka.smsapi.mapper.MainMapper;
 import smolka.smsapi.model.ActivationHistory;
 import smolka.smsapi.model.CurrentActivation;
@@ -36,10 +36,10 @@ public class ActivationHistoryServiceImpl implements ActivationHistoryService {
     private UserService userService;
 
     @Override
-    public ServiceMessage<ActivationHistoryDto> getActivationHistorySortedByFinishDateDesc(GetActivationHistoryRequest getActivationHistoryRequest) {
+    public ServiceMessage<ActivationHistoryDto> getActivationHistorySortedByFinishDateDesc(GetActivationHistoryRequest getActivationHistoryRequest) throws UserNotFoundException {
         User user = userService.findUserByUserKey(getActivationHistoryRequest.getUserApiKey());
         if (user == null) {
-            throw new InternalErrorException("Api key not exists", ErrorDictionary.WRONG_KEY);
+            throw new UserNotFoundException("Данный юзер не найден");
         }
         Pageable pageableForActivationHistoryWithSortFinishDateAsc = mainMapper.mapPageableFromCustomPageRequest(getActivationHistoryRequest, SortDictionary.ACTIVATION_HISTORY_SORT_FINISH_DATE_DESC);
         Page<ActivationHistory> activationHistory = null;

@@ -7,7 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import smolka.smsapi.dto.ServiceMessage;
 import smolka.smsapi.dto.UserDto;
 import smolka.smsapi.enums.SmsConstants;
-import smolka.smsapi.exception.InternalErrorException;
+import smolka.smsapi.exception.UserNotFoundException;
 import smolka.smsapi.mapper.MainMapper;
 import smolka.smsapi.model.User;
 import smolka.smsapi.repository.UserRepository;
@@ -26,35 +26,20 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void delete(String userApiKey) {
-        try {
-            userRepository.deleteByKey(userApiKey);
-        }
-        catch (Exception e) {
-            throw new InternalErrorException(e.getMessage());
-        }
+        userRepository.deleteByKey(userApiKey);
     }
 
     @Override
     public User findUserByUserKey(String userApiKey) {
-        try {
-            return userRepository.findUserByKey(userApiKey);
-        }
-        catch (Exception e) {
-            throw new InternalErrorException(e.getMessage());
-        }
+        return userRepository.findUserByKey(userApiKey);
     }
 
     @Override
-    public ServiceMessage<UserDto> getUserInfo(String userApiKey) {
-        try {
-            User user = userRepository.findUserByKey(userApiKey);
-            if (user == null) {
-                throw new InternalErrorException("Данного юзера не существует");
-            }
-            return new ServiceMessage<>(SmsConstants.SUCCESS_STATUS.getValue(), mainMapper.mapping(user, UserDto.class));
+    public ServiceMessage<UserDto> getUserInfo(String userApiKey) throws UserNotFoundException {
+        User user = userRepository.findUserByKey(userApiKey);
+        if (user == null) {
+            throw new UserNotFoundException("Данного юзера не существует");
         }
-        catch (Exception e) {
-            throw new InternalErrorException(e.getMessage());
-        }
+        return new ServiceMessage<>(SmsConstants.SUCCESS_STATUS.getValue(), mainMapper.mapping(user, UserDto.class));
     }
 }

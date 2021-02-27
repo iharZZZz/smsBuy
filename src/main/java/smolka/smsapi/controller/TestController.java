@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import smolka.smsapi.dto.*;
 import smolka.smsapi.dto.input.GetActivationHistoryRequest;
 import smolka.smsapi.dto.input.OrderRequest;
+import smolka.smsapi.exception.*;
 import smolka.smsapi.service.activation.ActivationHistoryService;
 import smolka.smsapi.service.activation.CurrentActivationService;
 import smolka.smsapi.service.api_key.UserService;
@@ -25,32 +26,32 @@ public class TestController {
     private UserService userService;
 
     @PostMapping("/order")
-    public ServiceMessage<CurrentActivationCreateInfoDto> order(@RequestBody @Validated OrderRequest orderRequest) {
+    public ServiceMessage<CurrentActivationCreateInfoDto> order(@RequestBody @Validated OrderRequest orderRequest) throws ReceiverException, UserNotFoundException, NoNumbersException, UserBalanceIsEmptyException {
         return currentActivationService.orderActivation(orderRequest.getApiKey(), orderRequest.getCost(), orderRequest.getService(), orderRequest.getCountry());
     }
 
     @GetMapping("/cost")
-    public ServiceMessage<CostMapDto> getCostMap(@RequestParam("apiKey") String apiKey, @RequestParam(required = false) String country) {
+    public ServiceMessage<CostMapDto> getCostMap(@RequestParam("apiKey") String apiKey, @RequestParam(required = false) String country) throws ReceiverException, UserNotFoundException {
         return currentActivationService.getCostsForActivations(apiKey, country);
     }
 
     @PostMapping("/getActivationHistory")
-    public ServiceMessage<ActivationHistoryDto> getActivationHistory(@RequestBody GetActivationHistoryRequest getActivationHistoryRequest) {
+    public ServiceMessage<ActivationHistoryDto> getActivationHistory(@RequestBody GetActivationHistoryRequest getActivationHistoryRequest) throws UserNotFoundException {
         return activationHistoryService.getActivationHistorySortedByFinishDateDesc(getActivationHistoryRequest);
     }
 
     @GetMapping("/user")
-    public ServiceMessage<UserDto> getUserInfo(@RequestParam("apiKey") String apiKey) {
+    public ServiceMessage<UserDto> getUserInfo(@RequestParam("apiKey") String apiKey) throws UserNotFoundException {
         return userService.getUserInfo(apiKey);
     }
 
     @GetMapping("/currentActivationStatus")
-    public ServiceMessage<ActivationMessageDto> getActivationStatus(@RequestParam("apiKey") String apiKey, @RequestParam("id") Long id) {
+    public ServiceMessage<ActivationMessageDto> getActivationStatus(@RequestParam("apiKey") String apiKey, @RequestParam("id") Long id) throws ActivationNotFoundException, UserNotFoundException {
         return currentActivationService.getCurrentActivationForUser(apiKey, id);
     }
 
     @GetMapping("/allCurrentActivations")
-    public ServiceMessage<CurrentActivationsStatusDto> getAllCurrentActivations(@RequestParam("apiKey") String apiKey) {
+    public ServiceMessage<CurrentActivationsStatusDto> getAllCurrentActivations(@RequestParam("apiKey") String apiKey) throws UserNotFoundException {
         return currentActivationService.getCurrentActivationsForUser(apiKey);
     }
 }

@@ -11,8 +11,8 @@ import smolka.smsapi.enums.ActivationStatus;
 import smolka.smsapi.enums.SourceList;
 import smolka.smsapi.model.ActivationTarget;
 import smolka.smsapi.model.Country;
-import smolka.smsapi.repository.ActivationTargetRepository;
-import smolka.smsapi.repository.CountryRepository;
+import smolka.smsapi.service.activation_target.ActivationTargetService;
+import smolka.smsapi.service.country.CountryService;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -25,9 +25,9 @@ public class SmsHubMapper {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     @Autowired
-    private ActivationTargetRepository activationTargetRepository;
+    private ActivationTargetService activationTargetService;
     @Autowired
-    private CountryRepository countryRepository;
+    private CountryService countryService;
 
     public List<ReceiverActivationStatusDto> mapActivationsStatusResponse(Map<String, Object> root) {
         List<Map<String, Object>> arrayActivations = (List<Map<String, Object>>)root.get("array");
@@ -62,24 +62,14 @@ public class SmsHubMapper {
         Map<String, Map<String, Map<String, Integer>>> rootJson = objectMapper.readValue(response, HashMap.class);
         ReceiverCostMapDto costMap = new ReceiverCostMapDto();
         costMap.setSource(SourceList.SMSHUB);
-        List<Country> countries = countryRepository.findAll();
-        List<ActivationTarget> services = activationTargetRepository.findAll();
-        Map<String, Country> countryMap = new HashMap<>();
-        Map<String, ActivationTarget> serviceMap = new HashMap<>();
-        countries.forEach(c -> {
-            countryMap.put(c.getSmshubCountryCode(), c);
-        });
-        services.forEach(s -> {
-            serviceMap.put(s.getSmshubServiceCode(), s);
-        });
         for (String countryInJson : rootJson.keySet()) {
             Map<String, Map<String, Integer>> serviceSegment = rootJson.get(countryInJson);
-            Country countryEntity = countryMap.get(countryInJson);
+            Country countryEntity = countryService.getCountryBySmsHubCode(countryInJson);
             if (countryEntity == null) {
                 continue;
             }
             for (String serviceInRootJson : serviceSegment.keySet()) {
-                ActivationTarget serviceEntity = serviceMap.get(serviceInRootJson);
+                ActivationTarget serviceEntity = activationTargetService.getTargetBySmsHubCode(serviceInRootJson);
                 if (serviceEntity == null) {
                     continue;
                 }

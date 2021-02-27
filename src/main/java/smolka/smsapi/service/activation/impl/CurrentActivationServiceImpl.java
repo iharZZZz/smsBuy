@@ -3,12 +3,11 @@ package smolka.smsapi.service.activation.impl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import smolka.smsapi.dto.*;
 import smolka.smsapi.dto.receiver.ReceiverActivationInfoDto;
 import smolka.smsapi.enums.*;
-import smolka.smsapi.exception.InternalErrorException;
+import smolka.smsapi.exception.*;
 import smolka.smsapi.mapper.MainMapper;
 import smolka.smsapi.model.*;
 import smolka.smsapi.repository.ActivationTargetRepository;
@@ -52,13 +51,13 @@ public class CurrentActivationServiceImpl implements CurrentActivationService {
 
     @Override
     @Transactional
-    public ServiceMessage<CurrentActivationCreateInfoDto> orderActivation(String apiKey, BigDecimal cost, String serviceCode, String countryCode) {
+    public ServiceMessage<CurrentActivationCreateInfoDto> orderActivation(String apiKey, BigDecimal cost, String serviceCode, String countryCode) throws ReceiverException, UserNotFoundException, UserBalanceIsEmptyException, NoNumbersException {
         User user = userService.findUserByUserKey(apiKey);
         if (user == null) {
-            throw new InternalErrorException("Api key not exists", ErrorDictionary.WRONG_KEY);
+            throw new UserNotFoundException("Данного юзера не существует");
         }
         if (!balanceSyncService.orderIsPossible(user, cost)) {
-            throw new InternalErrorException("User balance is empty", ErrorDictionary.NO_BALANCE);
+            throw new UserBalanceIsEmptyException("Не хватает денег");
         }
         ActivationTarget service = activationTargetRepository.findByServiceCode(serviceCode);
         Country country = countryRepository.findByCountryCode(countryCode);
@@ -71,16 +70,16 @@ public class CurrentActivationServiceImpl implements CurrentActivationService {
     }
 
     @Override
-    public ServiceMessage<ActivationMessageDto> getCurrentActivationForUser(String apiKey, Long id) {
+    public ServiceMessage<ActivationMessageDto> getCurrentActivationForUser(String apiKey, Long id) throws ActivationNotFoundException, UserNotFoundException {
         User user = userService.findUserByUserKey(apiKey);
         if (user == null) {
-            throw new InternalErrorException("Api key not exists", ErrorDictionary.WRONG_KEY);
+            throw new UserNotFoundException("Данного юзера не существует");
         }
         CurrentActivation activation = currentActivationRepository.findCurrentActivationByIdAndUser(id, user);
         if (activation == null) {
             ActivationHistory activationHistory = activationHistoryService.findActivationHistoryById(id);
             if (activationHistory == null) {
-                throw new InternalErrorException("This activation not exist", ErrorDictionary.NO_ACTIVATION);
+                throw new ActivationNotFoundException("This activation not exist");
             }
             return new ServiceMessage<>(SmsConstants.SUCCESS_STATUS.getValue(), mainMapper.mapActivationMessageFromActivationHistory(activationHistory));
         } else {
@@ -89,20 +88,20 @@ public class CurrentActivationServiceImpl implements CurrentActivationService {
     }
 
     @Override
-    public ServiceMessage<CurrentActivationsStatusDto> getCurrentActivationsForUser(String apiKey) {
+    public ServiceMessage<CurrentActivationsStatusDto> getCurrentActivationsForUser(String apiKey) throws UserNotFoundException {
         User user = userService.findUserByUserKey(apiKey);
         if (user == null) {
-            throw new InternalErrorException("Api key not exists", ErrorDictionary.WRONG_KEY);
+            throw new UserNotFoundException("This activation not exist");
         }
         List<CurrentActivation> activations = currentActivationRepository.findAllCurrentActivationsByUser(user);
         return new ServiceMessage<>(SmsConstants.SUCCESS_STATUS.getValue(), mainMapper.mapActivationsStatusFromCurrentActivations(activations));
     }
 
     @Override
-    public ServiceMessage<CostMapDto> getCostsForActivations(String apiKey, String countryCode) {
+    public ServiceMessage<CostMapDto> getCostsForActivations(String apiKey, String countryCode) throws ReceiverException, UserNotFoundException {
         User user = userService.findUserByUserKey(apiKey);
         if (user == null) {
-            throw new InternalErrorException("Api key not exists", ErrorDictionary.WRONG_KEY);
+            throw new UserNotFoundException("Данного юзера не существует");
         }
         return new ServiceMessage<>(SmsConstants.SUCCESS_STATUS.getValue(), receiversAdapter.getCommonCostMap(countryRepository.findByCountryCode(countryCode)));
     }

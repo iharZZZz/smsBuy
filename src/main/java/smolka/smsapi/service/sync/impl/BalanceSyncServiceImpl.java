@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import smolka.smsapi.exception.InternalErrorException;
+import smolka.smsapi.exception.UserNotFoundException;
 import smolka.smsapi.model.User;
 import smolka.smsapi.repository.UserRepository;
 import smolka.smsapi.service.sync.BalanceSyncService;
@@ -28,7 +28,7 @@ public class BalanceSyncServiceImpl implements BalanceSyncService {
     }
 
     private interface BalanceOperationLambda<T> {
-        T getResultOfOperation(User user, BigDecimal sum);
+        T getResultOfOperation(User user, BigDecimal sum) throws UserNotFoundException;
     }
 
     @AllArgsConstructor
@@ -125,18 +125,18 @@ public class BalanceSyncServiceImpl implements BalanceSyncService {
     }
 
 
-    private Boolean orderIsPossibleOperation(User user, BigDecimal orderCost) {
+    private Boolean orderIsPossibleOperation(User user, BigDecimal orderCost) throws UserNotFoundException {
         user = userRepository.findUserByUserId(user.getUserId());
         if (user == null) {
-            throw new InternalErrorException("Данного юзера не существует");
+            throw new UserNotFoundException("Данного юзера не существует");
         }
         return user.getBalance().compareTo(orderCost) >= 0;
     }
 
-    private User subFromRealBalanceAndAddToFreezeOperation(User user, BigDecimal sum) {
+    private User subFromRealBalanceAndAddToFreezeOperation(User user, BigDecimal sum) throws UserNotFoundException {
         user = userRepository.findUserByUserId(user.getUserId());
         if (user == null) {
-            throw new InternalErrorException("Данного юзера не существует");
+            throw new UserNotFoundException("Данного юзера не существует");
         }
         BigDecimal subBalance = user.getBalance().subtract(sum);
         if (subBalance.compareTo(BigDecimal.ZERO) < 0) {
@@ -147,10 +147,10 @@ public class BalanceSyncServiceImpl implements BalanceSyncService {
         return userRepository.save(user);
     }
 
-    private User subFromFreezeAndAddToRealBalanceOperation(User user, BigDecimal sum) {
+    private User subFromFreezeAndAddToRealBalanceOperation(User user, BigDecimal sum) throws UserNotFoundException {
         user = userRepository.findUserByUserId(user.getUserId());
         if (user == null) {
-            throw new InternalErrorException("Данного юзера не существует");
+            throw new UserNotFoundException("Данного юзера не существует");
         }
         BigDecimal subFreezeBalance = user.getFreezeBalance().subtract(sum);
         if (subFreezeBalance.compareTo(BigDecimal.ZERO) < 0) {
@@ -161,10 +161,10 @@ public class BalanceSyncServiceImpl implements BalanceSyncService {
         return userRepository.save(user);
     }
 
-    private User subFromFreezeOperation(User user, BigDecimal sum) {
+    private User subFromFreezeOperation(User user, BigDecimal sum) throws UserNotFoundException {
         user = userRepository.findUserByUserId(user.getUserId());
         if (user == null) {
-            throw new InternalErrorException("Данного юзера не существует");
+            throw new UserNotFoundException("Данного юзера не существует");
         }
         BigDecimal subFreezeBalance = user.getFreezeBalance().subtract(sum);
         if (subFreezeBalance.compareTo(BigDecimal.ZERO) < 0) {

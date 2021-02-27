@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import smolka.smsapi.dto.CommonReceiversActivationInfoMap;
 import smolka.smsapi.dto.receiver.ReceiverActivationStatusDto;
 import smolka.smsapi.enums.ActivationStatus;
+import smolka.smsapi.exception.ReceiverException;
 import smolka.smsapi.model.CurrentActivation;
 import smolka.smsapi.model.User;
 import smolka.smsapi.service.activation.CurrentActivationService;
@@ -51,7 +52,7 @@ public class MessageUpdater extends Thread {
         // TODO: здесь надо падать
     }
 
-    private void setMessageForActivationsStep() {
+    private void setMessageForActivationsStep() throws ReceiverException {
         List<CurrentActivation> currentActivations = currentActivationService.findAllCurrentActivationsWithoutReceivedMessage();
         CommonReceiversActivationInfoMap receiverActivationInfoMap = receiversAdapter.getReceiversCurrentActivations();
         for (CurrentActivation activation : currentActivations) {
@@ -84,7 +85,7 @@ public class MessageUpdater extends Thread {
         }
     }
 
-    private void step() {
+    private void step() throws ReceiverException {
         setMessageForActivationsStep();
         closeExpiredActivationsStep();
     }
