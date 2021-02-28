@@ -19,6 +19,9 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import javax.sql.DataSource;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
 import java.util.Properties;
 
 @Configuration
@@ -123,5 +126,11 @@ public class MainConfiguration {
     @Bean
     public RestTemplate restTemplate() {
         return new RestTemplate();
+    }
+
+    @Bean
+    public Validator validator() {
+        ValidatorFactory validatorFactory = Validation.buildDefaultValidatorFactory();
+        return validatorFactory.usingContext().getValidator();
     }
 }

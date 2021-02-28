@@ -7,18 +7,13 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotNull;
-import java.math.BigDecimal;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class OrderRequest extends ApiRequest {
+public class GetActivationRequest extends ApiRequest {
     @NotNull
-    private BigDecimal cost;
-    @NotNull
-    private String service;
-    @NotNull
-    private String country;
+    private Long id;
 }

@@ -37,7 +37,7 @@ public class ActivationHistoryServiceImpl implements ActivationHistoryService {
 
     @Override
     public ServiceMessage<ActivationHistoryDto> getActivationHistorySortedByFinishDateDesc(GetActivationHistoryRequest getActivationHistoryRequest) throws UserNotFoundException {
-        User user = userService.findUserByUserKey(getActivationHistoryRequest.getUserApiKey());
+        User user = userService.findUserByUserKey(getActivationHistoryRequest.getApiKey());
         if (user == null) {
             throw new UserNotFoundException("Данный юзер не найден");
         }

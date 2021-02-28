@@ -5,6 +5,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import smolka.smsapi.dto.*;
+import smolka.smsapi.dto.input.GetActivationRequest;
+import smolka.smsapi.dto.input.GetCostRequest;
+import smolka.smsapi.dto.input.OrderRequest;
 import smolka.smsapi.dto.receiver.ReceiverActivationInfoDto;
 import smolka.smsapi.enums.*;
 import smolka.smsapi.exception.*;
@@ -51,33 +54,33 @@ public class CurrentActivationServiceImpl implements CurrentActivationService {
 
     @Override
     @Transactional
-    public ServiceMessage<CurrentActivationCreateInfoDto> orderActivation(String apiKey, BigDecimal cost, String serviceCode, String countryCode) throws ReceiverException, UserNotFoundException, UserBalanceIsEmptyException, NoNumbersException {
-        User user = userService.findUserByUserKey(apiKey);
+    public ServiceMessage<CurrentActivationCreateInfoDto> orderActivation(OrderRequest orderRequest) throws ReceiverException, UserNotFoundException, UserBalanceIsEmptyException, NoNumbersException {
+        User user = userService.findUserByUserKey(orderRequest.getApiKey());
         if (user == null) {
             throw new UserNotFoundException("Данного юзера не существует");
         }
-        if (!balanceSyncService.orderIsPossible(user, cost)) {
+        if (!balanceSyncService.orderIsPossible(user, orderRequest.getCost())) {
             throw new UserBalanceIsEmptyException("Не хватает денег");
         }
-        ActivationTarget service = activationTargetRepository.findByServiceCode(serviceCode);
-        Country country = countryRepository.findByCountryCode(countryCode);
-        ReceiverActivationInfoDto receiverActivationInfo = receiversAdapter.orderAttempt(country, service, cost);
-        CurrentActivation newActivation = mainMapper.createNewCurrentActivation(receiverActivationInfo, user, country, service, cost, minutesForActivation);
+        ActivationTarget service = activationTargetRepository.findByServiceCode(orderRequest.getService());
+        Country country = countryRepository.findByCountryCode(orderRequest.getCountry());
+        ReceiverActivationInfoDto receiverActivationInfo = receiversAdapter.orderAttempt(country, service, orderRequest.getCost());
+        CurrentActivation newActivation = mainMapper.createNewCurrentActivation(receiverActivationInfo, user, country, service, orderRequest.getCost(), minutesForActivation);
         currentActivationRepository.save(newActivation);
         CurrentActivationCreateInfoDto activationInfo = mainMapper.mapActivationInfoFromActivation(newActivation);
-        balanceSyncService.subFromRealBalanceAndAddToFreeze(user, cost);
+        balanceSyncService.subFromRealBalanceAndAddToFreeze(user, orderRequest.getCost());
         return new ServiceMessage<>(SmsConstants.SUCCESS_STATUS.getValue(), activationInfo);
     }
 
     @Override
-    public ServiceMessage<ActivationMessageDto> getCurrentActivationForUser(String apiKey, Long id) throws ActivationNotFoundException, UserNotFoundException {
-        User user = userService.findUserByUserKey(apiKey);
+    public ServiceMessage<ActivationMessageDto> getCurrentActivationForUser(GetActivationRequest getActivationRequest) throws ActivationNotFoundException, UserNotFoundException {
+        User user = userService.findUserByUserKey(getActivationRequest.getApiKey());
         if (user == null) {
             throw new UserNotFoundException("Данного юзера не существует");
         }
-        CurrentActivation activation = currentActivationRepository.findCurrentActivationByIdAndUser(id, user);
+        CurrentActivation activation = currentActivationRepository.findCurrentActivationByIdAndUser(getActivationRequest.getId(), user);
         if (activation == null) {
-            ActivationHistory activationHistory = activationHistoryService.findActivationHistoryById(id);
+            ActivationHistory activationHistory = activationHistoryService.findActivationHistoryById(getActivationRequest.getId());
             if (activationHistory == null) {
                 throw new ActivationNotFoundException("This activation not exist");
             }
@@ -98,12 +101,12 @@ public class CurrentActivationServiceImpl implements CurrentActivationService {
     }
 
     @Override
-    public ServiceMessage<CostMapDto> getCostsForActivations(String apiKey, String countryCode) throws ReceiverException, UserNotFoundException {
-        User user = userService.findUserByUserKey(apiKey);
+    public ServiceMessage<CostMapDto> getCostsForActivations(GetCostRequest costRequest) throws ReceiverException, UserNotFoundException {
+        User user = userService.findUserByUserKey(costRequest.getApiKey());
         if (user == null) {
             throw new UserNotFoundException("Данного юзера не существует");
         }
-        return new ServiceMessage<>(SmsConstants.SUCCESS_STATUS.getValue(), receiversAdapter.getCommonCostMap(countryRepository.findByCountryCode(countryCode)));
+        return new ServiceMessage<>(SmsConstants.SUCCESS_STATUS.getValue(), receiversAdapter.getCommonCostMap(countryRepository.findByCountryCode(costRequest.getCountry())));
     }
 
     @Override

@@ -10,6 +10,8 @@ import smolka.smsapi.dto.ServiceMessage;
 import smolka.smsapi.enums.SmsConstants;
 import smolka.smsapi.exception.*;
 
+import javax.validation.ValidationException;
+
 @ControllerAdvice
 @Slf4j
 public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
@@ -48,5 +50,12 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
         logger.error("Юзер не найден", e);
         ServiceMessage<String> serviceMessage = new ServiceMessage<>(SmsConstants.ERROR_STATUS.getValue(), SmsConstants.USER_NOT_FOUND_MSG.getValue());
         return new ResponseEntity<>(serviceMessage, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(ValidationException.class)
+    public ResponseEntity<ServiceMessage<String>> handle(ValidationException e) {
+        logger.error("Ошибка валидации", e);
+        ServiceMessage<String> serviceMessage = new ServiceMessage<>(SmsConstants.ERROR_STATUS.getValue(), e.getMessage());
+        return new ResponseEntity<>(serviceMessage, HttpStatus.BAD_REQUEST);
     }
 }
