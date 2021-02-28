@@ -9,4 +9,5 @@ public interface UserService {
     void delete(String userApiKey);
     User findUserByUserKey(String userApiKey);
     ServiceMessage<UserDto> getUserInfo(String userApiKey) throws UserNotFoundException;
+//    void testSaveUser(String newApiKey);
 }

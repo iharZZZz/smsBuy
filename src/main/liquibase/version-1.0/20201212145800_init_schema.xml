@@ -12,7 +12,7 @@
             <column name="ID" type="BIGINT" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="USERNAME" type="VARCHAR(20)">
+            <column name="USERNAME" type="VARCHAR(50)">
                 <constraints unique="true"/>
             </column>
             <column name="PASSWORD" type="VARCHAR(150)"/>

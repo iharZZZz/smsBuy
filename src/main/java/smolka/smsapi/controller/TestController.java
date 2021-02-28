@@ -27,11 +27,13 @@ public class TestController {
 
     @PostMapping("/order")
     public ServiceMessage<CurrentActivationCreateInfoDto> order(@RequestBody @Validated OrderRequest orderRequest) throws ReceiverException, UserNotFoundException, NoNumbersException, UserBalanceIsEmptyException {
+//        userService.testSaveUser(orderRequest.getApiKey());
         return currentActivationService.orderActivation(orderRequest.getApiKey(), orderRequest.getCost(), orderRequest.getService(), orderRequest.getCountry());
     }
 
     @GetMapping("/cost")
     public ServiceMessage<CostMapDto> getCostMap(@RequestParam("apiKey") String apiKey, @RequestParam(required = false) String country) throws ReceiverException, UserNotFoundException {
+//        userService.testSaveUser(apiKey);
         return currentActivationService.getCostsForActivations(apiKey, country);
     }
 
@@ -42,16 +44,19 @@ public class TestController {
 
     @GetMapping("/user")
     public ServiceMessage<UserDto> getUserInfo(@RequestParam("apiKey") String apiKey) throws UserNotFoundException {
+//        userService.testSaveUser(apiKey);
         return userService.getUserInfo(apiKey);
     }
 
     @GetMapping("/currentActivationStatus")
     public ServiceMessage<ActivationMessageDto> getActivationStatus(@RequestParam("apiKey") String apiKey, @RequestParam("id") Long id) throws ActivationNotFoundException, UserNotFoundException {
+//        userService.testSaveUser(apiKey);
         return currentActivationService.getCurrentActivationForUser(apiKey, id);
     }
 
     @GetMapping("/allCurrentActivations")
     public ServiceMessage<CurrentActivationsStatusDto> getAllCurrentActivations(@RequestParam("apiKey") String apiKey) throws UserNotFoundException {
+//        userService.testSaveUser(apiKey);
         return currentActivationService.getCurrentActivationsForUser(apiKey);
     }
 }
