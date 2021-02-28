@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import smolka.smsapi.dto.ServiceMessage;
 import smolka.smsapi.dto.input.*;
 import smolka.smsapi.enums.Action;
+import smolka.smsapi.enums.SmsConstants;
 import smolka.smsapi.exception.*;
 import smolka.smsapi.service.activation.ActivationHistoryService;
 import smolka.smsapi.service.activation.CurrentActivationService;
@@ -49,26 +50,26 @@ public class RequestHandlerImpl implements RequestHandler {
                 case ORDER: {
                     OrderRequest orderRequest = objectMapper.readValue(requestBody, OrderRequest.class);
                     validate(orderRequest);
-                    return currentActivationService.orderActivation(orderRequest);
+                    return createSuccessServiceMessage(currentActivationService.orderActivation(orderRequest));
                 }
                 case COST: {
                     GetCostRequest getCostRequest = objectMapper.readValue(requestBody, GetCostRequest.class);
-                    return currentActivationService.getCostsForActivations(getCostRequest);
+                    return createSuccessServiceMessage(currentActivationService.getCostsForActivations(getCostRequest));
                 }
                 case ACTIVATION_HISTORY: {
                     GetActivationHistoryRequest getActivationHistoryRequest = objectMapper.readValue(requestBody, GetActivationHistoryRequest.class);
-                    return activationHistoryService.getActivationHistorySortedByFinishDateDesc(getActivationHistoryRequest);
+                    return createSuccessServiceMessage(activationHistoryService.getActivationHistorySortedByFinishDateDesc(getActivationHistoryRequest));
                 }
                 case USER_INFO: {
-                    return userService.getUserInfo(apiRequest.getApiKey());
+                    return createSuccessServiceMessage(userService.getUserInfo(apiRequest.getApiKey()));
                 }
                 case CURR_ACTIVATION: {
                     GetActivationRequest getActivationRequest = objectMapper.readValue(requestBody, GetActivationRequest.class);
                     validate(getActivationRequest);
-                    return currentActivationService.getCurrentActivationForUser(getActivationRequest);
+                    return createSuccessServiceMessage(currentActivationService.getCurrentActivationForUser(getActivationRequest));
                 }
                 case CURR_ACTIVATIONS: {
-                    return currentActivationService.getCurrentActivationsForUser(apiRequest.getApiKey());
+                    return createSuccessServiceMessage(currentActivationService.getCurrentActivationsForUser(apiRequest.getApiKey()));
                 }
                 default: {
                     throw new ValidationException("Неизвестная операция");
@@ -85,5 +86,9 @@ public class RequestHandlerImpl implements RequestHandler {
             ConstraintViolation<T> firstViolation = violations.stream().findFirst().orElse(null);
             throw new ValidationException(firstViolation.getMessage());
         }
+    }
+
+    private <T> ServiceMessage<T> createSuccessServiceMessage(T body) {
+        return new ServiceMessage<>(SmsConstants.SUCCESS_STATUS.getValue(), body);
     }
 }

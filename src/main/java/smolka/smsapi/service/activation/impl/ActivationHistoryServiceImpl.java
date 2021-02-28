@@ -6,10 +6,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import smolka.smsapi.dto.ActivationHistoryDto;
-import smolka.smsapi.dto.ServiceMessage;
 import smolka.smsapi.dto.input.GetActivationHistoryRequest;
 import smolka.smsapi.enums.ActivationStatus;
-import smolka.smsapi.enums.SmsConstants;
 import smolka.smsapi.enums.SortDictionary;
 import smolka.smsapi.exception.UserNotFoundException;
 import smolka.smsapi.mapper.MainMapper;
@@ -35,7 +33,7 @@ public class ActivationHistoryServiceImpl implements ActivationHistoryService {
     private UserService userService;
 
     @Override
-    public ServiceMessage<ActivationHistoryDto> getActivationHistorySortedByFinishDateDesc(GetActivationHistoryRequest getActivationHistoryRequest) throws UserNotFoundException {
+    public ActivationHistoryDto getActivationHistorySortedByFinishDateDesc(GetActivationHistoryRequest getActivationHistoryRequest) throws UserNotFoundException {
         User user = userService.findUserByUserKey(getActivationHistoryRequest.getApiKey());
         if (user == null) {
             throw new UserNotFoundException("Данный юзер не найден");
@@ -54,8 +52,7 @@ public class ActivationHistoryServiceImpl implements ActivationHistoryService {
         if (getActivationHistoryRequest.getStartDateAfter() != null && getActivationHistoryRequest.getStartDateBefore() != null) {
             activationHistory = activationHistoryRepository.findAllByUserAndCreateDateGreaterThanEqualAndCreateDateLessThanEqual(user, getActivationHistoryRequest.getStartDateAfter().atStartOfDay(), getActivationHistoryRequest.getStartDateBefore().atStartOfDay(), pageableForActivationHistoryWithSortFinishDateAsc);
         }
-        ActivationHistoryDto activationHistoryDto = mainMapper.mapActivationHistoryDtoFromActivationHistoryListAndCount(activationHistory.toList(), pageableForActivationHistoryWithSortFinishDateAsc, activationHistoryRepository.countByUser(user));
-        return new ServiceMessage<>(SmsConstants.SUCCESS_STATUS.getValue(), activationHistoryDto);
+        return mainMapper.mapActivationHistoryDtoFromActivationHistoryListAndCount(activationHistory.toList(), pageableForActivationHistoryWithSortFinishDateAsc, activationHistoryRepository.countByUser(user));
     }
 
     @Override

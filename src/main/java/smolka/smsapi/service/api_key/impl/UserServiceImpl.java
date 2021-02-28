@@ -4,9 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import smolka.smsapi.dto.ServiceMessage;
 import smolka.smsapi.dto.UserDto;
-import smolka.smsapi.enums.SmsConstants;
 import smolka.smsapi.exception.UserNotFoundException;
 import smolka.smsapi.mapper.MainMapper;
 import smolka.smsapi.model.User;
@@ -35,12 +33,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ServiceMessage<UserDto> getUserInfo(String userApiKey) throws UserNotFoundException {
+    public UserDto getUserInfo(String userApiKey) throws UserNotFoundException {
         User user = userRepository.findUserByKey(userApiKey);
         if (user == null) {
             throw new UserNotFoundException("Данного юзера не существует");
         }
-        return new ServiceMessage<>(SmsConstants.SUCCESS_STATUS.getValue(), mainMapper.mapping(user, UserDto.class));
+        return mainMapper.mapping(user, UserDto.class);
     }
 
 
