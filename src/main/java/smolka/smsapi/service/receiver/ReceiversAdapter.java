@@ -12,6 +12,8 @@ import java.math.BigDecimal;
 
 public interface ReceiversAdapter {
     CostMapDto getCommonCostMap(Country country) throws ReceiverException;
+
     CommonReceiversActivationInfoMap getReceiversCurrentActivations() throws ReceiverException;
+
     ReceiverActivationInfoDto orderAttempt(Country country, ActivationTarget service, BigDecimal cost) throws ReceiverException, NoNumbersException;
 }

@@ -13,7 +13,6 @@ import smolka.smsapi.dto.receiver.ReceiverCostMapDto;
 import smolka.smsapi.enums.ActivationStatus;
 import smolka.smsapi.enums.SortDictionary;
 import smolka.smsapi.model.*;
-import smolka.smsapi.repository.ActivationTargetRepository;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;

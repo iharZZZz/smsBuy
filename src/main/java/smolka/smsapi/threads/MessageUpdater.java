@@ -42,8 +42,7 @@ public class MessageUpdater extends Thread {
             try {
                 Thread.sleep(delay * 1000);
                 step();
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 log.error("Ошибка в MessageUpdater ", e);
                 break;
             }

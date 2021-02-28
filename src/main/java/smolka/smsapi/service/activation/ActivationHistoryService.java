@@ -12,6 +12,8 @@ import java.util.List;
 
 public interface ActivationHistoryService {
     ServiceMessage<ActivationHistoryDto> getActivationHistorySortedByFinishDateDesc(GetActivationHistoryRequest getActivationHistoryRequest) throws UserNotFoundException;
+
     void saveAllCurrentActivationsToHistoryWithStatus(List<CurrentActivation> currentActivations, ActivationStatus status);
+
     ActivationHistory findActivationHistoryById(Long id);
 }

@@ -11,7 +11,7 @@ import org.springframework.web.client.RestTemplate;
 import smolka.smsapi.dto.receiver.ReceiverActivationInfoDto;
 import smolka.smsapi.dto.receiver.ReceiverActivationStatusDto;
 import smolka.smsapi.dto.receiver.ReceiverCostMapDto;
-import smolka.smsapi.enums.*;
+import smolka.smsapi.enums.SourceList;
 import smolka.smsapi.enums.smshub.SmsHubErrorResponseDictionary;
 import smolka.smsapi.exception.ReceiverException;
 import smolka.smsapi.mapper.SmsHubMapper;
@@ -49,8 +49,7 @@ public class SmsHubReceiver implements RestReceiver {
             } else {
                 throw new Exception("Неизвестный формат ответа");
             }
-        }
-        catch (Exception exc) {
+        } catch (Exception exc) {
             throw new ReceiverException("[SMS-HUB] Ошибка при заказе номера ", response, SourceList.SMSHUB);
         }
     }
@@ -70,8 +69,7 @@ public class SmsHubReceiver implements RestReceiver {
                 return new ArrayList<>();
             }
             throw new Exception("Неизвестный формат ответа");
-        }
-        catch (Exception exc) {
+        } catch (Exception exc) {
             throw new ReceiverException("[SMS-HUB] Ошибка при запросе статуса активаций ", response, SourceList.SMSHUB);
         }
     }

@@ -1,12 +1,10 @@
 <databaseChangeLog
         xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
-        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd
-        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd"
         logicalFilePath="20210124153100_fill_dict_tables.xml">
 
-    <changeSet id="20210124153100"  author="ihar_smolka@senla.eu">
+    <changeSet id="20210124153100" author="ihar_smolka@senla.eu">
         <insert tableName="COUNTRY">
             <column name="CODE" value="ru"/>
             <column name="SMSHUB_CODE" value="0"/>

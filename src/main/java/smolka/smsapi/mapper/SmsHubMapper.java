@@ -30,7 +30,7 @@ public class SmsHubMapper {
     private CountryService countryService;
 
     public List<ReceiverActivationStatusDto> mapActivationsStatusResponse(Map<String, Object> root) {
-        List<Map<String, Object>> arrayActivations = (List<Map<String, Object>>)root.get("array");
+        List<Map<String, Object>> arrayActivations = (List<Map<String, Object>>) root.get("array");
         List<ReceiverActivationStatusDto> activationStatusList = new ArrayList<>();
         for (Map<String, Object> element : arrayActivations) {
             final Long id = Long.parseLong(element.get("id").toString());

@@ -25,10 +25,10 @@ import javax.validation.ValidatorFactory;
 import java.util.Properties;
 
 @Configuration
-@EnableJpaRepositories(basePackages = { "smolka.smsapi.repository" },
+@EnableJpaRepositories(basePackages = {"smolka.smsapi.repository"},
         entityManagerFactoryRef = "emF",
         transactionManagerRef = "tm")
-@EntityScan(basePackages = { "smolka.smsapi.model" })
+@EntityScan(basePackages = {"smolka.smsapi.model"})
 @EnableTransactionManagement
 @EnableWebMvc
 public class MainConfiguration {

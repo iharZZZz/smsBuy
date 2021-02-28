@@ -6,8 +6,6 @@ import lombok.NoArgsConstructor;
 import smolka.smsapi.enums.ActivationStatus;
 import smolka.smsapi.enums.SourceList;
 
-import java.time.LocalDateTime;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

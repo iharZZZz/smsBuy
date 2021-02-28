@@ -67,7 +67,7 @@ public class MarkUpperServiceImpl implements MarkUpperService {
         return costMapDto;
     }
 
-    private BigDecimal percentage(BigDecimal base, Integer pct){
+    private BigDecimal percentage(BigDecimal base, Integer pct) {
         return base.multiply(new BigDecimal(pct)).divide(new BigDecimal(100), RoundingMode.CEILING).setScale(scale, RoundingMode.CEILING);
     }
 }

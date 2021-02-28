@@ -13,9 +13,6 @@ import smolka.smsapi.model.User;
 import smolka.smsapi.repository.UserRepository;
 import smolka.smsapi.service.api_key.UserService;
 
-import java.math.BigDecimal;
-import java.util.UUID;
-
 @Service
 @Slf4j
 public class UserServiceImpl implements UserService {

@@ -9,7 +9,6 @@ import smolka.smsapi.dto.ActivationHistoryDto;
 import smolka.smsapi.dto.ServiceMessage;
 import smolka.smsapi.dto.input.GetActivationHistoryRequest;
 import smolka.smsapi.enums.ActivationStatus;
-import smolka.smsapi.enums.ReceiverErrorDictionary;
 import smolka.smsapi.enums.SmsConstants;
 import smolka.smsapi.enums.SortDictionary;
 import smolka.smsapi.exception.UserNotFoundException;

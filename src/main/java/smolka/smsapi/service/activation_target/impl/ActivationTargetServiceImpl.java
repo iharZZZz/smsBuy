@@ -3,7 +3,6 @@ package smolka.smsapi.service.activation_target.impl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import smolka.smsapi.model.ActivationTarget;
-import smolka.smsapi.model.Country;
 import smolka.smsapi.repository.ActivationTargetRepository;
 import smolka.smsapi.service.activation_target.ActivationTargetService;
 

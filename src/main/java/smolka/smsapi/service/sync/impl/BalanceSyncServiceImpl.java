@@ -11,7 +11,9 @@ import smolka.smsapi.service.sync.BalanceSyncService;
 
 import java.math.BigDecimal;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -23,8 +25,8 @@ public class BalanceSyncServiceImpl implements BalanceSyncService {
 
     @AllArgsConstructor
     private static class SyncBlock {
-         final Lock locker;
-         Integer lockCount;
+        final Lock locker;
+        Integer lockCount;
     }
 
     private interface BalanceOperationLambda<T> {
@@ -114,7 +116,7 @@ public class BalanceSyncServiceImpl implements BalanceSyncService {
             mapLocker.unlock();
         }
     }
-    
+
     private void entryInSyncBlock(User user) {
         workersSyncMap.get(user.getUserId()).locker.lock();
     }

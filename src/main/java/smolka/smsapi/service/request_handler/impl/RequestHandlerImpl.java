@@ -16,7 +16,6 @@ import smolka.smsapi.service.request_handler.RequestHandler;
 import javax.validation.ConstraintViolation;
 import javax.validation.ValidationException;
 import javax.validation.Validator;
-import java.util.Objects;
 import java.util.Set;
 
 @Service

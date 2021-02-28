@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ServiceMessage <T> {
+public class ServiceMessage<T> {
     private String status;
     private T message;
 }
