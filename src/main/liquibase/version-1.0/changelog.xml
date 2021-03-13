@@ -6,4 +6,5 @@
     <include file="20201212145800_init_schema.xml" relativeToChangelogFile="true"/>
     <include file="20210124153100_fill_dict_tables.xml" relativeToChangelogFile="true"/>
     <include file="20210124153400_add_test_users.xml" relativeToChangelogFile="true"/>
+    <include file="20210313125600_add_test_data.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

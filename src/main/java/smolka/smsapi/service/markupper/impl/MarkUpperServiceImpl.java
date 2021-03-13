@@ -20,8 +20,8 @@ public class MarkUpperServiceImpl implements MarkUpperService {
     @Value(value = "${sms.api.bigdecimal_scaling}")
     private Integer scale;
 
-    private static final String percentageForMarkUpperParameterName = "PERCENTAGE_MARK_UPPER";
-    private static final Integer defaultValue = 10;
+    private static final String PERCENTAGE_FOR_MARKUPPER_PARAM_NAME = "PERCENTAGE_MARK_UPPER";
+    private static final Integer DEFAULT_VALUE = 10;
 
     @Autowired
     private ParametersRepository parametersRepository;
@@ -29,17 +29,17 @@ public class MarkUpperServiceImpl implements MarkUpperService {
 
     @PostConstruct
     public void initialize() {
-        InternalParameter percentageForMarkUpper = parametersRepository.findByName(percentageForMarkUpperParameterName);
+        InternalParameter percentageForMarkUpper = parametersRepository.findByName(PERCENTAGE_FOR_MARKUPPER_PARAM_NAME);
         percentageCashedValue = percentageForMarkUpper == null ? null : Integer.parseInt(percentageForMarkUpper.getValue());
     }
 
     @Override
     @Transactional
     public void changePercentage(Integer percentage) {
-        InternalParameter percentageForMarkUpper = parametersRepository.findByName(percentageForMarkUpperParameterName);
+        InternalParameter percentageForMarkUpper = parametersRepository.findByName(PERCENTAGE_FOR_MARKUPPER_PARAM_NAME);
         if (percentageForMarkUpper == null) {
-            percentageForMarkUpper = new InternalParameter(percentageForMarkUpperParameterName, defaultValue.toString());
-            percentageCashedValue = defaultValue;
+            percentageForMarkUpper = new InternalParameter(PERCENTAGE_FOR_MARKUPPER_PARAM_NAME, DEFAULT_VALUE.toString());
+            percentageCashedValue = DEFAULT_VALUE;
         }
         if (percentage != null) {
             percentageForMarkUpper.setValue(percentage.toString());
@@ -50,7 +50,7 @@ public class MarkUpperServiceImpl implements MarkUpperService {
 
     @Override
     public CostMapDto markUp(CostMapDto costMapDto) {
-        Integer percentage = percentageCashedValue == null ? defaultValue : percentageCashedValue;
+        Integer percentage = percentageCashedValue == null ? DEFAULT_VALUE : percentageCashedValue;
         if (percentage == 0) {
             return costMapDto;
         }

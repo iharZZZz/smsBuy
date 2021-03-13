@@ -96,7 +96,7 @@
             <column name="PARAM_NAME" type="VARCHAR(50)">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="PARAM_VALUE" type="VARCHAR(100)">
+            <column name="PARAM_VALUE" type="VARCHAR(1000)">
                 <constraints nullable="false"/>
             </column>
         </createTable>
