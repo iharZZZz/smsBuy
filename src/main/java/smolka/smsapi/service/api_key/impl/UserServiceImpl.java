@@ -11,6 +11,9 @@ import smolka.smsapi.model.User;
 import smolka.smsapi.repository.UserRepository;
 import smolka.smsapi.service.api_key.UserService;
 
+import java.math.BigDecimal;
+import java.util.UUID;
+
 @Service
 @Slf4j
 public class UserServiceImpl implements UserService {
@@ -41,22 +44,21 @@ public class UserServiceImpl implements UserService {
         return mainMapper.mapping(user, UserDto.class);
     }
 
-
-//    @Override
-//    @Transactional
-//    public void testSaveUser(String newApiKey) {
-//        if (userRepository.findUserByKey(newApiKey) != null) {
-//            return;
-//        }
-//        String id = UUID.randomUUID().toString();
-//        User user = User.builder()
-//                .balance(new BigDecimal(20000))
-//                .email(id)
-//                .freezeBalance(new BigDecimal(0))
-//                .password(id)
-//                .key(newApiKey)
-//                .username(id)
-//                .build();
-//        userRepository.save(user);
-//    }
+    @Override
+    @Transactional
+    public void testSaveUser(String newApiKey) {
+        if (userRepository.findUserByKey(newApiKey) != null) {
+            return;
+        }
+        String id = UUID.randomUUID().toString();
+        User user = User.builder()
+                .balance(new BigDecimal(20000))
+                .email(id)
+                .freezeBalance(new BigDecimal(0))
+                .password(id)
+                .key(newApiKey)
+                .username(id)
+                .build();
+        userRepository.save(user);
+    }
 }

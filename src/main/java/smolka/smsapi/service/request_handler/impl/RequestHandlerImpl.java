@@ -42,6 +42,7 @@ public class RequestHandlerImpl implements RequestHandler {
         try {
             ApiRequest apiRequest = objectMapper.readValue(requestBody, ApiRequest.class);
             validate(apiRequest);
+//            createTestUser(apiRequest);
             Action action = Action.getAction(apiRequest.getAction());
             if (action == null) {
                 throw new ValidationException("Неизвестная операция");
@@ -90,5 +91,9 @@ public class RequestHandlerImpl implements RequestHandler {
 
     private <T> ServiceMessage<T> createSuccessServiceMessage(T body) {
         return new ServiceMessage<>(SmsConstants.SUCCESS_STATUS.getValue(), body);
+    }
+
+    private void createTestUser(ApiRequest apiRequest) {
+        userService.testSaveUser(apiRequest.getApiKey());
     }
 }
