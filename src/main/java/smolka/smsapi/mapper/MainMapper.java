@@ -7,10 +7,14 @@ import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import smolka.smsapi.dto.*;
 import smolka.smsapi.dto.input.CustomPageableRequest;
+import smolka.smsapi.dto.input.QiwiAddBalanceRequest;
+import smolka.smsapi.dto.qiwi.AmountDto;
+import smolka.smsapi.dto.qiwi.CreateBillRequest;
 import smolka.smsapi.dto.receiver.ReceiverActivationInfoDto;
 import smolka.smsapi.dto.receiver.ReceiverActivationStatusDto;
 import smolka.smsapi.dto.receiver.ReceiverCostMapDto;
 import smolka.smsapi.enums.ActivationStatus;
+import smolka.smsapi.enums.BillStatus;
 import smolka.smsapi.enums.SortDictionary;
 import smolka.smsapi.model.*;
 import smolka.smsapi.utils.DateTimeUtils;
@@ -20,6 +24,7 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,6 +32,7 @@ public class MainMapper {
 
     private static final Integer PAGE_NUMBER_DEFAULT = 0;
     private static final Integer PAGE_SIZE_DEFAULT = 1000;
+    private static final String RUS_RUB_CURRENCY_ID = "643";
     @Value(value = "${sms.api.bigdecimal_scaling}")
     private Integer scale;
     @Autowired
@@ -74,13 +80,6 @@ public class MainMapper {
         return ActivationMessageDto.builder()
                 .message(activation.getMessage())
                 .number(activation.getNumber())
-                .build();
-    }
-
-    public ActivationMessageDto mapActivationMessageFromActivationHistory(ActivationHistory activationHistory) {
-        return ActivationMessageDto.builder()
-                .message(activationHistory.getMessage())
-                .number(activationHistory.getNumber())
                 .build();
     }
 
@@ -155,6 +154,26 @@ public class MainMapper {
             receiverActivationInfoMap.addActivationInfo(receiverActivation);
         }
         return receiverActivationInfoMap;
+    }
+
+    public QiwiBill mapQiwiBillFromAddBalanceRequestAndUser(QiwiAddBalanceRequest qiwiAddBalanceRequest, User user) {
+        return QiwiBill.builder()
+                .amount(qiwiAddBalanceRequest.getAmount())
+                .createDate(DateTimeUtils.getUtcCurrentLocalDateTime())
+                .id(UUID.randomUUID().toString())
+                .status(BillStatus.ACTIVE.getCode())
+                .closeDate(null)
+                .build();
+    }
+
+    public CreateBillRequest mapQiwiBillRequestFromEntity(QiwiBill qiwiBill, int expMinutes) {
+        return CreateBillRequest.builder()
+                .amount(AmountDto.builder()
+                        .currency(RUS_RUB_CURRENCY_ID)
+                        .value(qiwiBill.getAmount())
+                        .build())
+                .expirationDateTime(DateTimeUtils.toUtcZonedDateTime(qiwiBill.getCreateDate().plusMinutes(expMinutes)))
+                .build();
     }
 
     private CurrentActivationStatusDto mapActivationStatusFromActivation(CurrentActivation activation) {

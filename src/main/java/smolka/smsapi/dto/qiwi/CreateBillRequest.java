@@ -13,7 +13,6 @@ import java.time.ZonedDateTime;
 @AllArgsConstructor
 @Builder
 public class CreateBillRequest {
-    private String billId;
     private AmountDto amount;
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mmZ", timezone = "UTC")
     private ZonedDateTime expirationDateTime;

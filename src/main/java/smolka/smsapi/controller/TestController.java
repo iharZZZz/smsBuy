@@ -16,7 +16,6 @@ public class TestController {
     @GetMapping
     public CreateBillRequest create() {
         return CreateBillRequest.builder()
-                .billId("1")
                 .expirationDateTime(ZonedDateTime.now())
                 .build();
     }

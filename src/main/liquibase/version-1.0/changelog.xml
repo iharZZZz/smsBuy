@@ -7,4 +7,5 @@
     <include file="20210124153100_fill_dict_tables.xml" relativeToChangelogFile="true"/>
     <include file="20210124153400_add_test_users.xml" relativeToChangelogFile="true"/>
     <include file="20210313125600_add_test_data.xml" relativeToChangelogFile="true"/>
+    <include file="20210314154200_add_qiwibill_table.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

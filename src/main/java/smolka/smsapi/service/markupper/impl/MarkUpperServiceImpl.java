@@ -5,9 +5,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import smolka.smsapi.dto.CostMapDto;
-import smolka.smsapi.model.InternalParameter;
-import smolka.smsapi.repository.ParametersRepository;
 import smolka.smsapi.service.markupper.MarkUpperService;
+import smolka.smsapi.service.parameters_service.ParametersService;
 
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
@@ -20,37 +19,26 @@ public class MarkUpperServiceImpl implements MarkUpperService {
     @Value(value = "${sms.api.bigdecimal_scaling}")
     private Integer scale;
 
-    private static final String PERCENTAGE_FOR_MARKUPPER_PARAM_NAME = "PERCENTAGE_MARK_UPPER";
-    private static final Integer DEFAULT_VALUE = 10;
-
     @Autowired
-    private ParametersRepository parametersRepository;
+    private ParametersService parametersService;
+
     private Integer percentageCashedValue;
 
     @PostConstruct
     public void initialize() {
-        InternalParameter percentageForMarkUpper = parametersRepository.findByName(PERCENTAGE_FOR_MARKUPPER_PARAM_NAME);
-        percentageCashedValue = percentageForMarkUpper == null ? null : Integer.parseInt(percentageForMarkUpper.getValue());
+        percentageCashedValue = parametersService.getPercentageForMarkUpper();
     }
 
     @Override
     @Transactional
     public void changePercentage(Integer percentage) {
-        InternalParameter percentageForMarkUpper = parametersRepository.findByName(PERCENTAGE_FOR_MARKUPPER_PARAM_NAME);
-        if (percentageForMarkUpper == null) {
-            percentageForMarkUpper = new InternalParameter(PERCENTAGE_FOR_MARKUPPER_PARAM_NAME, DEFAULT_VALUE.toString());
-            percentageCashedValue = DEFAULT_VALUE;
-        }
-        if (percentage != null) {
-            percentageForMarkUpper.setValue(percentage.toString());
-            percentageCashedValue = percentage;
-        }
-        parametersRepository.save(percentageForMarkUpper);
+        percentageCashedValue = percentage;
+        parametersService.savePercentageForMarkUpper(percentageCashedValue);
     }
 
     @Override
     public CostMapDto markUp(CostMapDto costMapDto) {
-        Integer percentage = percentageCashedValue == null ? DEFAULT_VALUE : percentageCashedValue;
+        Integer percentage = percentageCashedValue;
         if (percentage == 0) {
             return costMapDto;
         }

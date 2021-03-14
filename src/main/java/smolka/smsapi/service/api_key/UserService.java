@@ -10,5 +10,6 @@ public interface UserService {
     User findUserByUserKey(String userApiKey);
 
     UserDto getUserInfo(String userApiKey) throws UserNotFoundException;
+
     void testSaveUser(String newApiKey);
 }
