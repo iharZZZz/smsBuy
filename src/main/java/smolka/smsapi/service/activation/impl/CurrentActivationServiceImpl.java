@@ -59,7 +59,7 @@ public class CurrentActivationServiceImpl implements CurrentActivationService {
 
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = { ReceiverException.class, UserNotFoundException.class, UserBalanceIsEmptyException.class, NoNumbersException.class })
     public CurrentActivationCreateInfoDto orderActivation(OrderRequest orderRequest) throws ReceiverException, UserNotFoundException, UserBalanceIsEmptyException, NoNumbersException {
         User user = userService.findUserByUserKey(orderRequest.getApiKey());
         if (user == null) {

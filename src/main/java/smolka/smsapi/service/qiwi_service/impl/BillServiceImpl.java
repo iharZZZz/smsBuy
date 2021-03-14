@@ -40,7 +40,7 @@ public class BillServiceImpl implements BillService {
     private Integer billLifeMinutes;
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = { UserNotFoundException.class, PaymentSystemException.class })
     public CreateBillResponse createBillAndReturnLink(QiwiAddBalanceRequest qiwiAddBalanceRequest) throws UserNotFoundException, PaymentSystemException {
         User user = userRepository.findUserByKey(qiwiAddBalanceRequest.getApiKey());
         if (user == null) {

@@ -91,7 +91,7 @@ public class BalanceSyncServiceImpl implements BalanceSyncService {
             new Thread(futureResult).start();
             return futureResult.get();
         } catch (Exception exc) {
-            throw new RuntimeException(exc);
+            throw new RuntimeException(exc); // TODO: подрефакторить это!!!
         }
     }
 
