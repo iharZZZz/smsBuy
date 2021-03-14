@@ -13,6 +13,7 @@ import smolka.smsapi.dto.receiver.ReceiverCostMapDto;
 import smolka.smsapi.enums.ActivationStatus;
 import smolka.smsapi.enums.SortDictionary;
 import smolka.smsapi.model.*;
+import smolka.smsapi.utils.DateTimeUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -65,6 +66,7 @@ public class MainMapper {
         CurrentActivationCreateInfoDto activationInfo = mapping(activation, CurrentActivationCreateInfoDto.class);
         activationInfo.setCountryCode(activation.getCountry().getCountryCode());
         activationInfo.setServiceCode(activation.getService().getServiceCode());
+        activationInfo.setCreateDate(DateTimeUtils.toUtcZonedDateTime(activation.getCreateDate()));
         return activationInfo;
     }
 
@@ -104,6 +106,8 @@ public class MainMapper {
                     ActivationHistoryElementDto activationHistoryDto = mapping(a, ActivationHistoryElementDto.class);
                     activationHistoryDto.setCountryCode(a.getCountry().getCountryCode());
                     activationHistoryDto.setServiceCode(a.getService().getServiceCode());
+                    activationHistoryDto.setCreateDate(DateTimeUtils.toUtcZonedDateTime(a.getCreateDate()));
+                    activationHistoryDto.setFinishDate(DateTimeUtils.toUtcZonedDateTime(a.getFinishDate()));
                     return activationHistoryDto;
                 })
                 .collect(Collectors.toList());
@@ -119,7 +123,7 @@ public class MainMapper {
                                                         ActivationTarget service,
                                                         BigDecimal cost,
                                                         Integer minutesForActivation) {
-        LocalDateTime createDate = LocalDateTime.now();
+        LocalDateTime createDate = DateTimeUtils.getUtcCurrentLocalDateTime();
         return CurrentActivation.builder()
                 .user(user)
                 .number(receiverActivationInfo.getNumber())
@@ -127,7 +131,7 @@ public class MainMapper {
                 .country(country)
                 .service(service)
                 .source(receiverActivationInfo.getSource())
-                .createDate(LocalDateTime.now())
+                .createDate(createDate)
                 .plannedFinishDate(createDate.plusMinutes(minutesForActivation))
                 .sourceId(receiverActivationInfo.getId())
                 .status(ActivationStatus.ACTIVE.getCode())
@@ -157,6 +161,7 @@ public class MainMapper {
         CurrentActivationStatusDto activationStatus = mapping(activation, CurrentActivationStatusDto.class);
         activationStatus.setCountryCode(activation.getCountry().getCountryCode());
         activationStatus.setServiceCode(activation.getService().getServiceCode());
+        activationStatus.setCreateDate(DateTimeUtils.toUtcZonedDateTime(activation.getCreateDate()));
         return activationStatus;
     }
 }

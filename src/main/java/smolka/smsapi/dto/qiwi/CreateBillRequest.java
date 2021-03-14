@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 @Data
 @NoArgsConstructor
@@ -15,6 +15,6 @@ import java.time.LocalDateTime;
 public class CreateBillRequest {
     private String billId;
     private AmountDto amount;
-    @JsonFormat(pattern = "YYYY-MM-DDTHH:mm:ss")
-    private LocalDateTime expirationDateTime;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mmZ", timezone = "UTC")
+    private ZonedDateTime expirationDateTime;
 }

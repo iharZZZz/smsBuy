@@ -17,8 +17,8 @@ import smolka.smsapi.model.User;
 import smolka.smsapi.repository.ActivationHistoryRepository;
 import smolka.smsapi.service.activation.ActivationHistoryService;
 import smolka.smsapi.service.api_key.UserService;
+import smolka.smsapi.utils.DateTimeUtils;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -44,13 +44,13 @@ public class ActivationHistoryServiceImpl implements ActivationHistoryService {
             activationHistory = activationHistoryRepository.findAllByUser(pageableForActivationHistoryWithSortFinishDateAsc, user);
         }
         if (getActivationHistoryRequest.getStartDateBefore() == null) {
-            activationHistory = activationHistoryRepository.findAllByUserAndCreateDateGreaterThanEqual(user, getActivationHistoryRequest.getStartDateAfter().atStartOfDay(), pageableForActivationHistoryWithSortFinishDateAsc);
+            activationHistory = activationHistoryRepository.findAllByUserAndCreateDateGreaterThanEqual(user, getActivationHistoryRequest.getStartDateAfter().toLocalDateTime(), pageableForActivationHistoryWithSortFinishDateAsc);
         }
         if (getActivationHistoryRequest.getStartDateAfter() == null) {
-            activationHistory = activationHistoryRepository.findAllByUserAndCreateDateLessThanEqual(user, getActivationHistoryRequest.getStartDateBefore().atStartOfDay(), pageableForActivationHistoryWithSortFinishDateAsc);
+            activationHistory = activationHistoryRepository.findAllByUserAndCreateDateLessThanEqual(user, getActivationHistoryRequest.getStartDateBefore().toLocalDateTime(), pageableForActivationHistoryWithSortFinishDateAsc);
         }
         if (getActivationHistoryRequest.getStartDateAfter() != null && getActivationHistoryRequest.getStartDateBefore() != null) {
-            activationHistory = activationHistoryRepository.findAllByUserAndCreateDateGreaterThanEqualAndCreateDateLessThanEqual(user, getActivationHistoryRequest.getStartDateAfter().atStartOfDay(), getActivationHistoryRequest.getStartDateBefore().atStartOfDay(), pageableForActivationHistoryWithSortFinishDateAsc);
+            activationHistory = activationHistoryRepository.findAllByUserAndCreateDateGreaterThanEqualAndCreateDateLessThanEqual(user, getActivationHistoryRequest.getStartDateAfter().toLocalDateTime(), getActivationHistoryRequest.getStartDateBefore().toLocalDateTime(), pageableForActivationHistoryWithSortFinishDateAsc);
         }
         return mainMapper.mapActivationHistoryDtoFromActivationHistoryListAndCount(activationHistory.toList(), pageableForActivationHistoryWithSortFinishDateAsc, activationHistoryRepository.countByUser(user));
     }
@@ -61,7 +61,7 @@ public class ActivationHistoryServiceImpl implements ActivationHistoryService {
         List<ActivationHistory> activationHistories = currentActivations.stream().map(curr -> {
             ActivationHistory activationHistory = mainMapper.mapActivationHistoryFromCurrentActivation(curr);
             activationHistory.setStatus(status.getCode());
-            activationHistory.setFinishDate(LocalDateTime.now());
+            activationHistory.setFinishDate(DateTimeUtils.getUtcCurrentLocalDateTime());
             return activationHistory;
         }).collect(Collectors.toList());
         activationHistoryRepository.saveAll(activationHistories);

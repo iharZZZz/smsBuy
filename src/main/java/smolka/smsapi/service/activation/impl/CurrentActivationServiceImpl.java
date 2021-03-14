@@ -24,9 +24,9 @@ import smolka.smsapi.service.activation.CurrentActivationService;
 import smolka.smsapi.service.api_key.UserService;
 import smolka.smsapi.service.receiver.ReceiversAdapter;
 import smolka.smsapi.service.sync.BalanceSyncService;
+import smolka.smsapi.utils.DateTimeUtils;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -83,11 +83,7 @@ public class CurrentActivationServiceImpl implements CurrentActivationService {
         }
         CurrentActivation activation = currentActivationRepository.findCurrentActivationByIdAndUser(getActivationRequest.getId(), user);
         if (activation == null) {
-            ActivationHistory activationHistory = activationHistoryService.findActivationHistoryById(getActivationRequest.getId());
-            if (activationHistory == null) {
-                throw new ActivationNotFoundException("This activation not exist");
-            }
-            return mainMapper.mapActivationMessageFromActivationHistory(activationHistory);
+            throw new ActivationNotFoundException("Данной активации не существует");
         } else {
             return mainMapper.mapActivationMessageFromCurrentActivation(activation);
         }
@@ -155,7 +151,7 @@ public class CurrentActivationServiceImpl implements CurrentActivationService {
 
     @Override
     public Map<User, List<CurrentActivation>> findAllCurrentExpiredActivationsForUsers() {
-        List<CurrentActivation> expiredActivations = currentActivationRepository.findAllCurrentActivationsByPlannedFinishDateLessThanEqual(LocalDateTime.now());
+        List<CurrentActivation> expiredActivations = currentActivationRepository.findAllCurrentActivationsByPlannedFinishDateLessThanEqual(DateTimeUtils.getUtcCurrentLocalDateTime());
         Map<User, List<CurrentActivation>> resultMap = new HashMap<>();
         for (CurrentActivation activation : expiredActivations) {
             User userForActivation = activation.getUser();

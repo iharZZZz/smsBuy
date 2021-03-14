@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 @Data
 @NoArgsConstructor
@@ -19,7 +20,7 @@ public class CurrentActivationCreateInfoDto {
     private String countryCode;
     private String serviceCode;
     private Integer status;
-    @JsonFormat(pattern = "dd.MM.yyyy HH:mm:ss")
-    private LocalDateTime createDate;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssZ", timezone = "UTC")
+    private ZonedDateTime createDate;
     private BigDecimal cost;
 }

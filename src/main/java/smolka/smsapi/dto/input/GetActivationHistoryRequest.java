@@ -8,6 +8,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.ZonedDateTime;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -16,10 +17,10 @@ import java.time.LocalDate;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class GetActivationHistoryRequest extends ApiRequest implements CustomPageableRequest {
 
-    @JsonFormat(pattern = "dd.MM.yyyy")
-    private LocalDate startDateBefore;
-    @JsonFormat(pattern = "dd.MM.yyyy")
-    private LocalDate startDateAfter;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mmZ", timezone = "UTC")
+    private ZonedDateTime startDateBefore;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mmZ", timezone = "UTC")
+    private ZonedDateTime startDateAfter;
 
     private Integer page;
     private Integer pageSize;
